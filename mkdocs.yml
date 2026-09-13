@@ -1,0 +1,102 @@
+# pgway documentation site (Material for MkDocs)
+#
+# Public URL (subpath): https://pgway.aknevrnky.dev/docs/
+# site_url MUST include that path so asset and page links resolve under /docs.
+#
+# Hosting note:
+#   mkdocs gh-deploy publishes the built site at the ROOT of the gh-pages branch.
+#   GitHub Pages + custom domain then serves that root as https://<domain>/ — not /docs.
+#   To keep /docs you need one of:
+#     1) Main site (landing) at pgway.aknevrnky.dev that serves this build under /docs
+#        (copy `site/` → `…/docs/` or reverse-proxy /docs → Pages origin), or
+#     2) A docs subdomain (e.g. docs.pgway.aknevrnky.dev) and change site_url to match.
+#   Do not point the apex domain solely at this repo's Pages if you need /docs as a path.
+
+site_name: Pgway Docs
+site_url: https://pgway.aknevrnky.dev/docs/
+site_description: Documentation for pgway — a proxy gateway for upstream HTTP/SOCKS5 proxies
+
+# Links in header point at the main project (code), not this docs repo
+repo_url: https://github.com/aknEvrnky/pgway
+repo_name: aknEvrnky/pgway
+
+# Prefer directory-style URLs (…/page/); works with the /docs/ site_url prefix
+use_directory_urls: true
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  logo: assets/gopher.svg
+  favicon: assets/gopher.svg
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.sections
+    - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  # Optional: "home" affordance back to the product site root
+  homepage: https://pgway.aknevrnky.dev
+
+copyright: >
+  Gopher inspired by the Go mascot by Renee French
+  (Creative Commons Attribution 4.0)
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Welcome: index.md
+  - Concepts:
+      - Resources & flow model: concepts/resources.md
+      - Binaries & planes: concepts/binaries.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+      - First run: getting-started/first-run.md
+  - Resource reference:
+      - Overview: reference/index.md
+      - Proxy: reference/proxy.md
+      - Pool: reference/pool.md
+      - LoadBalancer: reference/loadbalancer.md
+      - Router: reference/router.md
+      - Flow: reference/flow.md
+      - Entrypoint: reference/entrypoint.md
+  - Guides:
+      - Authentication: guides/authentication.md
+      - Load balancing: guides/load-balancing.md
+      - Routing: guides/routing.md
+      - CLI: guides/cli.md
+      - Distributed mode: guides/distributed.md
+      - Dashboard: guides/dashboard.md
