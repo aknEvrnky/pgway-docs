@@ -35,6 +35,15 @@ This writes four binaries under `./build/`:
 | Data Plane | `./build/pgway-dp` |
 | CLI | `./build/pgctl` |
 
+## Dev tools and tests
+
+```bash
+make tools   # installs gotestsum (and other make helpers) into GOPATH/bin
+make test    # runs the suite via gotestsum (-race)
+```
+
+`make test` depends on `make tools`, so a fresh clone should not hit an “unknown command: gotestsum” error as long as `$(go env GOPATH)/bin` is on your `PATH`.
+
 ## Build a single binary
 
 ```bash
