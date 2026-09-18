@@ -119,3 +119,4 @@ Operator tool — not a server. Talks to the CP over gRPC with a user token (`pg
 - [Installation](../getting-started/installation.md) — build from source
 - [Configuration](../getting-started/configuration.md) — config file and keys
 - [First run](../getting-started/first-run.md) — bootstrap and first apply
+- [Contributing](../guides/contributing.md) — architecture rules for contributors

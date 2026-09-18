@@ -100,3 +100,4 @@ nav:
       - CLI: guides/cli.md
       - Distributed mode: guides/distributed.md
       - Dashboard: guides/dashboard.md
+      - Contributing: guides/contributing.md
