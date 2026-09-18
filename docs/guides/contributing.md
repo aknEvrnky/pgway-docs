@@ -97,6 +97,10 @@ Cover new behavior with unit tests next to the code and/or `integration/` tests.
 4. Update **pgway-docs** in a matching change when the user-facing surface moved.
 5. Open a PR using the template; link issues and note docs PRs.
 
+## License
+
+The project is licensed under [Apache License 2.0](https://github.com/aknEvrnky/pgway/blob/main/LICENSE). Contributions are expected under the same terms.
+
 ## Related
 
 - [Resources & flow model](../concepts/resources.md)

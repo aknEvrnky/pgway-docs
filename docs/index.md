@@ -109,4 +109,4 @@ The source code and issue tracker remain at [github.com/aknEvrnky/pgway](https:/
 
 ## License
 
-pgway is released under the [MIT License](https://github.com/aknEvrnky/pgway/blob/main/LICENSE).
+pgway is released under the [Apache License 2.0](https://github.com/aknEvrnky/pgway/blob/main/LICENSE).
