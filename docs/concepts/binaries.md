@@ -101,6 +101,18 @@ Operator tool — not a server. Talks to the CP over gRPC with a user token (`pg
 | Issue user / agent tokens | Yes | No (consumes agent token) |
 | Dashboard / REST | Yes (experimental) | No |
 
+## Code layout (Go)
+
+| Area | Packages |
+|------|----------|
+| Shared domain | `internal/application/core/domain` |
+| Control plane | `internal/application/controlplane`, `auth`, `agent` |
+| Data plane | `internal/application/dataplane/{api,agenthost,balancer,consumer}` |
+| Ports | `internal/ports` |
+| Adapters | `internal/adapters/{grpc,http,rest,cli,repository/badger,...}` |
+
+`dataplane` packages must not import `controlplane` / `auth` / `agent`. Only `cmd/pgway` wires both planes in one process.
+
 ## Related
 
 - [Resources & flow model](resources.md) — what gets configured
