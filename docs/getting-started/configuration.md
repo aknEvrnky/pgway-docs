@@ -51,6 +51,9 @@ Full contents (keep this in sync with `main` when the file changes):
 # BadgerDB data directory (pgway, pgway-cp).
 badger_path: /var/pgway/lib
 
+# How often to run Badger value log GC (pgway, pgway-cp). 0 disables.
+badger_gc_interval: 5m
+
 # gRPC listen address for the control plane. pgway-dp / pgctl dial this address.
 grpc_listen_addr: ":9090"
 
@@ -92,6 +95,10 @@ heartbeat_interval: 10s
 # when agent_state_path already holds credentials.
 registration_token: ""
 
+# Max request body for non-CONNECT proxy HTTP. 0 = unlimited.
+# Accepts integers or human sizes (10MiB, 512KiB, 100MB). Also PGWAY_MAX_REQUEST_BODY_BYTES.
+max_request_body_bytes: 10MiB
+
 # Global log level: debug | info | warn | error (also PGWAY_LOG_LEVEL).
 log_level: info
 ```
@@ -101,6 +108,7 @@ log_level: info
 | Key | Default | Used by | Description |
 |-----|---------|---------|-------------|
 | `badger_path` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
+| `badger_gc_interval` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
 | `grpc_listen_addr` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
 | `rest_listen_addr` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
 | `token` | *(empty)* | `pgctl` | Bearer for CP calls; prefer `PGWAY_TOKEN` or `~/.pgctl/credentials` |
@@ -113,6 +121,7 @@ log_level: info
 | `agent_state_path` | `/var/lib/pgway/agent.json` | `pgway-dp` | Persisted `{agent_id, agent_token}` (dir `0700`, file `0600`) |
 | `heartbeat_interval` | `10s` | `pgway-dp` | Heartbeat period |
 | `registration_token` | *(empty)* | `pgway-dp` | First Register secret; prefer `PGWAY_REGISTRATION_TOKEN` |
+| `max_request_body_bytes` | `10MiB` | `pgway`, `pgway-dp` | Cap for non-CONNECT proxy request bodies; `0` = unlimited; accepts `10MiB` / `512KiB` / bare bytes |
 | `log_level` | `info` | all | `debug` \| `info` \| `warn` \| `error` |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
