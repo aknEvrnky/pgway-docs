@@ -1,26 +1,20 @@
 # pgway documentation site (Material for MkDocs)
 #
-# Public URL (subpath): https://pgway.aknevrnky.dev/docs/
-# site_url MUST include that path so asset and page links resolve under /docs.
+# Public URL: https://pgway.aknevrnky.dev/
+# site_url must match the custom domain root so asset and page links resolve correctly.
 #
-# Hosting note:
-#   mkdocs gh-deploy publishes the built site at the ROOT of the gh-pages branch.
-#   GitHub Pages + custom domain then serves that root as https://<domain>/ — not /docs.
-#   To keep /docs you need one of:
-#     1) Main site (landing) at pgway.aknevrnky.dev that serves this build under /docs
-#        (copy `site/` → `…/docs/` or reverse-proxy /docs → Pages origin), or
-#     2) A docs subdomain (e.g. docs.pgway.aknevrnky.dev) and change site_url to match.
-#   Do not point the apex domain solely at this repo's Pages if you need /docs as a path.
+# Hosting: mkdocs gh-deploy publishes at the ROOT of gh-pages; with CNAME
+# pgway.aknevrnky.dev that is served as https://pgway.aknevrnky.dev/.
 
 site_name: Pgway Docs
-site_url: https://pgway.aknevrnky.dev/docs/
+site_url: https://pgway.aknevrnky.dev/
 site_description: Documentation for pgway — a proxy gateway for upstream HTTP/SOCKS5 proxies
 
 # Links in header point at the main project (code), not this docs repo
 repo_url: https://github.com/aknEvrnky/pgway
 repo_name: aknEvrnky/pgway
 
-# Prefer directory-style URLs (…/page/); works with the /docs/ site_url prefix
+# Prefer directory-style URLs (…/page/)
 use_directory_urls: true
 
 docs_dir: docs
