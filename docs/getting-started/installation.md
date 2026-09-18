@@ -9,7 +9,7 @@ For now: clone the repository and use **`go build`**, **`make build`**, or **`go
 
 ## Prerequisites
 
-- [Go](https://go.dev/dl/) **1.25** or newer (`go version`)
+- [Go](https://go.dev/dl/) **1.27** or newer (`go version`)
 - Git
 - Optional, only for dashboard development: [Bun](https://bun.sh/) or Node.js 20+ (not required for the gateway itself)
 
