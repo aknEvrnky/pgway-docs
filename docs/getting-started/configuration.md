@@ -57,6 +57,12 @@ badger_gc_interval: 5m
 # gRPC listen address for the control plane. pgway-dp / pgctl dial this address.
 grpc_listen_addr: ":9090"
 
+# gRPC keepalive ping interval (server + client). 0 disables.
+grpc_keepalive_interval: 1m
+
+# How long to wait for a keepalive ping ACK. Required when interval > 0.
+grpc_keepalive_timeout: 20s
+
 # REST API listen address (pgway, pgway-cp).
 rest_listen_addr: ":8081"
 
@@ -110,6 +116,8 @@ log_level: info
 | `badger_path` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
 | `badger_gc_interval` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
 | `grpc_listen_addr` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
+| `grpc_keepalive_interval` | `1m` | all | gRPC keepalive ping period (server + client); `0` disables |
+| `grpc_keepalive_timeout` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
 | `rest_listen_addr` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
 | `token` | *(empty)* | `pgctl` | Bearer for CP calls; prefer `PGWAY_TOKEN` or `~/.pgctl/credentials` |
 | `token_ttl` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
