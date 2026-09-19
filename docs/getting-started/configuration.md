@@ -127,6 +127,12 @@ ttl = "5m"
 event_coalesce_window = "100ms"
 # Early flush when this many events land in one key before the window ends.
 event_coalesce_max_buffer = 256
+# All-in-one missed-event safety net (Bootstrap + listener reconcile). 0 disables.
+event_resync_interval = "5m"
+# Distributed DP only: fail_open | fail_closed when CP is unreachable.
+cp_disconnect_strategy = "fail_open"
+cp_disconnect_unreachable_threshold = "30s"
+cp_disconnect_recover_threshold = "0s"
 ```
 
 ## Keys
@@ -162,6 +168,10 @@ event_coalesce_max_buffer = 256
 | `proxy.dns_cache.ttl` | `PGWAY_PROXY_DNS_CACHE_TTL` | `5m` | `pgway`, `pgway-dp` | How long successful lookups are reused; must be `> 0` when enabled |
 | `dataplane.event_coalesce_window` | `PGWAY_DATAPLANE_EVENT_COALESCE_WINDOW` | `100ms` | `pgway`, `pgway-dp` | Change-event coalesce delay; `0` disables (immediate dispatch) |
 | `dataplane.event_coalesce_max_buffer` | `PGWAY_DATAPLANE_EVENT_COALESCE_MAX_BUFFER` | `256` | `pgway`, `pgway-dp` | Early flush threshold per coalesce key; must be `>= 1` when window is enabled |
+| `dataplane.event_resync_interval` | `PGWAY_DATAPLANE_EVENT_RESYNC_INTERVAL` | `5m` | `pgway` | Periodic full Resync (missed-event heal); `0` disables; ignored by `pgway-dp` |
+| `dataplane.cp_disconnect_strategy` | `PGWAY_DATAPLANE_CP_DISCONNECT_STRATEGY` | `fail_open` | `pgway-dp` | `fail_open` \| `fail_closed` when CP unreachable |
+| `dataplane.cp_disconnect_unreachable_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_UNREACHABLE_THRESHOLD` | `30s` | `pgway-dp` | Both proofs stale, then this long → unreachable (≈ up to 2× after CP death) |
+| `dataplane.cp_disconnect_recover_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_RECOVER_THRESHOLD` | `0s` | `pgway-dp` | Hysteresis leaving unreachable; `0` = immediate |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 

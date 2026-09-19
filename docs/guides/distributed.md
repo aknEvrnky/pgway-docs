@@ -83,10 +83,34 @@ Later DP starts reuse `agent.state_path` (no registration token).
 ## Hot reload / Watch
 
 - Applying or deleting resources on the CP emits change events.
-- **All-in-one:** in-process consumer rebuilds entrypoints / balancers.
-- **Distributed:** agents subscribe over gRPC **Watch**; the DP refreshes its in-memory view without requiring you to re-register.
+- **All-in-one:** in-process consumer rebuilds entrypoints / balancers. A periodic **Resync** (default every `5m`) also reloads cache + listeners so dropped in-process events heal without a restart (`dataplane.event_resync_interval`; `0` disables).
+- **Distributed:** agents subscribe over gRPC **Watch**. On each reconnect the DP runs a full **Resync** (Bootstrap + listener reconcile) so entrypoints added/removed while the CP was unreachable are healed.
 
 Balancer internal state (RR cursor, least-bytes counters, weighted currents) resets when that balancer instance is rebuilt.
+
+## Control plane unreachable (`pgway-dp`)
+
+Once the DP has bootstrapped and bound listeners, proxy traffic can continue on last-known config while the CP is down (**fail-open** by default — Envoy-style latch).
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `dataplane.cp_disconnect_strategy` | `fail_open` | `fail_open` keeps serving stale config indefinitely; `fail_closed` rejects **new** requests with **503** (existing CONNECT tunnels are not cut). State transitions are logged (`cp link state changed`). |
+| `dataplane.cp_disconnect_unreachable_threshold` | `30s` | Both heartbeat and Watch proofs must be stale, then remain so for this long, before `unreachable` (worst case about **2×** this value after CP death: wait for HB age-out, then this window) |
+| `dataplane.cp_disconnect_recover_threshold` | `0s` | Optional hysteresis before leaving `unreachable` |
+
+Cold start with CP down is still fatal (no disk last-known-good). Expired/revoked agent tokens still exit the process (re-register with a new registration token).
+
+Process readiness HTTP probes will consume the same link state when [#60](https://github.com/aknEvrnky/pgway/issues/60) lands. Under `fail_closed`, rejected requests include `Retry-After` set to `cp_disconnect_unreachable_threshold` (seconds).
+
+### Outage behaviour (operator view)
+
+| Situation | Default (`fail_open`) | `fail_closed` |
+|-----------|----------------------|---------------|
+| CP down &lt; ~threshold window | Keep proxying on last-known config | Same |
+| CP down long enough to be `unreachable` | Keep proxying (stale latch); logs `cp link state changed` | **New** requests → `503` + `Retry-After`; open CONNECT tunnels keep running |
+| CP returns, Watch reconnects | Full Resync (cache + listeners match CP again) | Same; `503` stops after recover |
+| Cold start while CP is down | Process exits (fatal) | Same |
+| All-in-one `pgway` | Disconnect policy N/A; periodic Resync every `event_resync_interval` heals dropped in-process events | Same |
 
 ## Agent lifecycle
 
