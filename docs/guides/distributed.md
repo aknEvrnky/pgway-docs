@@ -23,7 +23,7 @@ All-in-one still uses the same resource model and `pgctl`; it simply skips **age
 
 ## Topology
 
-1. **CP** listens on `grpc_listen_addr` (and optional experimental REST).
+1. **CP** listens on `grpc.listen_addr` (and optional experimental REST).
 2. Each **DP** dials that address, registers as an agent, heartbeats, and watches config.
 3. **Entrypoints** bind on the DP that received the config — clients hit the DP host:port, not the CP.
 
@@ -31,7 +31,7 @@ All-in-one still uses the same resource model and `pgctl`; it simply skips **age
 
 ```bash
 # Terminal 1 — Control Plane
-./build/pgway-cp --config ./cp.yml
+./build/pgway-cp --config ./cp.toml
 
 # Terminal 2 — admin (once)
 ./build/pgctl init --bootstrap-token 'pgw_…'
@@ -41,7 +41,7 @@ All-in-one still uses the same resource model and `pgctl`; it simply skips **age
 REG=$(./build/pgctl agent token create)
 
 # Terminal 3 — Data Plane
-PGWAY_REGISTRATION_TOKEN="$REG" ./build/pgway-dp --config ./dp.yml
+PGWAY_AGENT_REGISTRATION_TOKEN="$REG" ./build/pgway-dp --config ./dp.toml
 
 # Apply resources (served by DP after Watch/reload)
 ./build/pgctl apply -f stack.yaml
@@ -50,26 +50,35 @@ PGWAY_REGISTRATION_TOKEN="$REG" ./build/pgway-dp --config ./dp.yml
 
 ### Example configs
 
-```yaml
-# cp.yml
-badger_path: ./var/cp-lib
-grpc_listen_addr: ":9090"
-rest_listen_addr: ":8081"
-log_level: info
+```toml
+# cp.toml
+log_level = "info"
+
+[badger]
+path = "./var/cp-lib"
+
+[grpc]
+listen_addr = ":9090"
+
+[rest]
+listen_addr = ":8081"
 ```
 
-```yaml
-# dp.yml — grpc_listen_addr is the CP to dial
-grpc_listen_addr: "127.0.0.1:9090"
-agent_name: edge-1
-agent_labels:
-  zone: edge
-agent_state_path: ./var/agent-edge-1.json
-heartbeat_interval: 10s
-log_level: info
+```toml
+# dp.toml — grpc.listen_addr is the CP to dial
+log_level = "info"
+
+[grpc]
+listen_addr = "127.0.0.1:9090"
+
+[agent]
+name = "edge-1"
+labels = { zone = "edge" }
+state_path = "./var/agent-edge-1.json"
+heartbeat_interval = "10s"
 ```
 
-Later DP starts reuse `agent_state_path` (no registration token).
+Later DP starts reuse `agent.state_path` (no registration token).
 
 ## Hot reload / Watch
 
@@ -83,8 +92,8 @@ Balancer internal state (RR cursor, least-bytes counters, weighted currents) res
 
 | Event | Effect |
 |-------|--------|
-| Successful Register | Credentials written to `agent_state_path`; status → active (with heartbeats) |
-| Heartbeat | Extends sliding `agent_token_ttl`; keeps **active** within `agent_heartbeat_threshold` |
+| Successful Register | Credentials written to `agent.state_path`; status → active (with heartbeats) |
+| Heartbeat | Extends sliding `auth.agent_token_ttl`; keeps **active** within `agent.heartbeat_threshold` |
 | Graceful DP shutdown | Deregister → **passive** |
 | Missed heartbeats | **disconnected** |
 | `pgctl agent delete <name>` | Credentials revoked; row removed — need a **new** registration token to join again |
@@ -96,9 +105,9 @@ Balancer internal state (RR cursor, least-bytes counters, weighted currents) res
 
 ## Operations tips
 
-- Give each agent a stable unique `agent_name` and its own `agent_state_path`.
-- Point every `pgctl` and DP at the same CP `grpc_listen_addr` (host reachable from that machine).
-- Prefer `PGWAY_REGISTRATION_TOKEN` / `PGWAY_TOKEN` over committing secrets in YAML.
+- Give each agent a stable unique `agent.name` and its own `agent.state_path`.
+- Point every `pgctl` and DP at the same CP `grpc.listen_addr` (host reachable from that machine).
+- Prefer `PGWAY_AGENT_REGISTRATION_TOKEN` / `PGWAY_TOKEN` over committing secrets in TOML.
 - Entrypoint `host:port` is local to the **DP** process — open firewalls accordingly.
 - Label-based DP placement ([#46](https://github.com/aknEvrnky/pgway/issues/46)) and mTLS CP↔DP ([#47](https://github.com/aknEvrnky/pgway/issues/47)) are still open.
 
@@ -106,8 +115,8 @@ Balancer internal state (RR cursor, least-bytes counters, weighted currents) res
 
 | Symptom | Checks |
 |---------|--------|
-| DP exits: no agent state / empty registration token | First start needs `PGWAY_REGISTRATION_TOKEN` or a populated `agent_state_path` |
-| `agent list` shows disconnected | Network to CP, `heartbeat_interval` vs threshold, CP uptime |
+| DP exits: no agent state / empty registration token | First start needs `PGWAY_AGENT_REGISTRATION_TOKEN` or a populated `agent.state_path` |
+| `agent list` shows disconnected | Network to CP, `agent.heartbeat_interval` vs threshold, CP uptime |
 | Apply OK but no listener | Confirm DP is running and Watch connected; look for entrypoint bind logs on **DP**, not CP |
 | `pgctl` auth errors | `pgctl login`; `PGWAY_GRPC_LISTEN_ADDR`; not mixing agent token with user commands |
 | Restarted CP before init | Bootstrap token rotated — use the new log value |

@@ -1,13 +1,15 @@
 # Configuration
 
-Every binary loads settings the same way: a config **file** is required, then optional **environment variables** and **flags** override it.
+Every binary loads settings the same way: a **TOML** config **file** is required, then optional **environment variables** and **flags** override it.
+
+Process/runtime config is TOML. Control-plane **resource** specs (`pgctl apply`, `stack.yaml`) remain YAML.
 
 ## Precedence
 
 Highest wins:
 
 1. **Flags** — `--config <path>` (all binaries); `--token` (`pgctl`)
-2. **Environment** — `PGWAY_` + key in uppercase (e.g. `PGWAY_TOKEN`, `PGWAY_LOG_LEVEL`, `PGWAY_GRPC_LISTEN_ADDR`)
+2. **Environment** — `PGWAY_` + key in uppercase; nested keys use `_` for `.` (e.g. `PGWAY_TOKEN`, `PGWAY_LOG_LEVEL`, `PGWAY_GRPC_LISTEN_ADDR`, `PGWAY_AGENT_REGISTRATION_TOKEN`)
 3. **Config file**
 4. **Built-in defaults** (see table below)
 
@@ -15,9 +17,9 @@ A config file must exist on a search path (or via `--config`) even if you overri
 
 ## Where the file is loaded from
 
-With `--config /path/to/file.yml`, that file is used exclusively.
+With `--config /path/to/file.toml`, that file is used exclusively.
 
-Otherwise the process looks for `config.{yml,yaml,json,toml}` in order (first match wins):
+Otherwise the process looks for `config.toml` in:
 
 1. `/etc/pgway/`
 2. `$HOME/.pgway/`
@@ -26,9 +28,9 @@ Otherwise the process looks for `config.{yml,yaml,json,toml}` in order (first ma
 Starting point in the repo: copy the checked-in defaults, then tweak paths for your machine:
 
 ```bash
-cp config/default.yml ./config.yml
+cp config/default.toml ./config.toml
 # or:
-# mkdir -p ~/.pgway && cp config/default.yml ~/.pgway/config.yml
+# mkdir -p ~/.pgway && cp config/default.toml ~/.pgway/config.toml
 ```
 
 !!! tip "Local development"
@@ -38,109 +40,104 @@ cp config/default.yml ./config.yml
 
 Canonical source in the main repository:
 
-**[`config/default.yml`](https://github.com/aknEvrnky/pgway/blob/main/config/default.yml)**
+**[`config/default.toml`](https://github.com/aknEvrnky/pgway/blob/main/config/default.toml)**
 
 Full contents (keep this in sync with `main` when the file changes):
 
-```yaml
+```toml
 # pgway default configuration.
-# Every key can also be set via a PGWAY_-prefixed env var (e.g. PGWAY_TOKEN)
-# or, for the file location, the --config flag. Precedence:
+# Every key can also be set via a PGWAY_-prefixed env var (e.g. PGWAY_TOKEN,
+# PGWAY_BADGER_PATH, PGWAY_AGENT_REGISTRATION_TOKEN) or, for the file location,
+# the --config flag. Nested keys use underscores in env names (badger.path →
+# PGWAY_BADGER_PATH). Precedence:
 #   flags > env vars > this file > built-in defaults.
 
-# BadgerDB data directory (pgway, pgway-cp).
-badger_path: /var/pgway/lib
-
-# How often to run Badger value log GC (pgway, pgway-cp). 0 disables.
-badger_gc_interval: 5m
-
-# gRPC listen address for the control plane. pgway-dp / pgctl dial this address.
-grpc_listen_addr: ":9090"
-
-# gRPC keepalive ping interval (server + client). 0 disables.
-grpc_keepalive_interval: 1m
-
-# How long to wait for a keepalive ping ACK. Required when interval > 0.
-grpc_keepalive_timeout: 20s
-
-# REST API listen address (pgway, pgway-cp).
-rest_listen_addr: ":8081"
+log_level = "info"
 
 # Outgoing control-plane auth token — pgctl in distributed mode.
 # Prefer the PGWAY_TOKEN env var for secrets; leave empty for all-in-one.
-# pgway-dp uses an agent token from agent_state_path after registration.
-token: ""
+# pgway-dp uses an agent token from agent.state_path after registration.
+token = ""
 
+[badger]
+# BadgerDB data directory (pgway, pgway-cp).
+path = "/var/pgway/lib"
+# How often to run Badger value log GC (pgway, pgway-cp). 0 disables.
+gc_interval = "5m"
+
+[grpc]
+# gRPC listen address for the control plane. pgway-dp / pgctl dial this address.
+listen_addr = ":9090"
+# gRPC keepalive ping interval (server + client). 0 disables.
+keepalive_interval = "1m"
+# How long to wait for a keepalive ping ACK. Required when interval > 0.
+keepalive_timeout = "20s"
+
+[rest]
+# REST API listen address (pgway, pgway-cp).
+listen_addr = ":8081"
+
+[auth]
 # Default lifetime of login-issued tokens (pgway, pgway-cp).
-token_ttl: 720h
-
+token_ttl = "720h"
 # Single-use agent registration token default TTL (pgway, pgway-cp).
-registration_token_ttl: 24h
-
+registration_token_ttl = "24h"
 # Sliding TTL for per-agent bearer tokens; extended on every heartbeat.
-agent_token_ttl: 168h
+agent_token_ttl = "168h"
 
-# Derived agent status boundary: within → active, beyond → disconnected.
-agent_heartbeat_threshold: 30s
-
-# --- Data plane (pgway-dp) agent identity ---
-
+[agent]
 # Unique agent name registered with the CP. Empty → hostname.
-agent_name: ""
-
+name = ""
 # Operator-declared labels advertised at Register (seed for placement).
-agent_labels: {}
-
+labels = {}
 # Persisted agent credentials ({agent_id, agent_token}). Dir 0700, file 0600.
-agent_state_path: /var/lib/pgway/agent.json
-
+state_path = "/var/lib/pgway/agent.json"
 # How often pgway-dp sends Heartbeat RPCs.
-heartbeat_interval: 10s
+heartbeat_interval = "10s"
+# Derived agent status boundary: within → active, beyond → disconnected.
+heartbeat_threshold = "30s"
+# First-time Register secret. Prefer PGWAY_AGENT_REGISTRATION_TOKEN; leave empty
+# when agent.state_path already holds credentials.
+registration_token = ""
 
-# First-time Register secret. Prefer PGWAY_REGISTRATION_TOKEN; leave empty
-# when agent_state_path already holds credentials.
-registration_token: ""
-
+[proxy]
 # Max request body for non-CONNECT proxy HTTP. 0 = unlimited.
-# Accepts integers or human sizes (10MiB, 512KiB, 100MB). Also PGWAY_MAX_REQUEST_BODY_BYTES.
-max_request_body_bytes: 10MiB
-
+# Accepts integers or human sizes (10MiB, 512KiB, 100MB).
+# Also PGWAY_PROXY_MAX_REQUEST_BODY_BYTES.
+max_request_body_bytes = "10MiB"
 # Per-proxy http.Transport pool (pgway, pgway-dp). 0 max_idle_conns = unlimited.
-proxy_max_idle_conns: 1024
-proxy_max_idle_conns_per_host: 128
-proxy_idle_conn_timeout: 90s
-proxy_dial_timeout: 10s
-
-# Global log level: debug | info | warn | error (also PGWAY_LOG_LEVEL).
-log_level: info
+max_idle_conns = 1024
+max_idle_conns_per_host = 128
+idle_conn_timeout = "90s"
+dial_timeout = "10s"
 ```
 
 ## Keys
 
-| Key | Default | Used by | Description |
-|-----|---------|---------|-------------|
-| `badger_path` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
-| `badger_gc_interval` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
-| `grpc_listen_addr` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
-| `grpc_keepalive_interval` | `1m` | all | gRPC keepalive ping period (server + client); `0` disables |
-| `grpc_keepalive_timeout` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
-| `rest_listen_addr` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
-| `token` | *(empty)* | `pgctl` | Bearer for CP calls; prefer `PGWAY_TOKEN` or `~/.pgctl/credentials` |
-| `token_ttl` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
-| `registration_token_ttl` | `24h` | `pgway`, `pgway-cp` | Default TTL for single-use agent registration tokens |
-| `agent_token_ttl` | `168h` | `pgway`, `pgway-cp` | Sliding TTL for per-agent tokens |
-| `agent_heartbeat_threshold` | `30s` | `pgway`, `pgway-cp` | Active vs disconnected boundary |
-| `agent_name` | *(hostname)* | `pgway-dp` | Unique agent identity |
-| `agent_labels` | `{}` | `pgway-dp` | Labels advertised at Register |
-| `agent_state_path` | `/var/lib/pgway/agent.json` | `pgway-dp` | Persisted `{agent_id, agent_token}` (dir `0700`, file `0600`) |
-| `heartbeat_interval` | `10s` | `pgway-dp` | Heartbeat period |
-| `registration_token` | *(empty)* | `pgway-dp` | First Register secret; prefer `PGWAY_REGISTRATION_TOKEN` |
-| `max_request_body_bytes` | `10MiB` | `pgway`, `pgway-dp` | Cap for non-CONNECT proxy request bodies; `0` = unlimited; accepts `10MiB` / `512KiB` / bare bytes |
-| `proxy_max_idle_conns` | `1024` | `pgway`, `pgway-dp` | Global idle conn limit per upstream transport; `0` = unlimited |
-| `proxy_max_idle_conns_per_host` | `128` | `pgway`, `pgway-dp` | Idle conns per upstream host; must be `> 0` |
-| `proxy_idle_conn_timeout` | `90s` | `pgway`, `pgway-dp` | How long idle pooled connections are kept |
-| `proxy_dial_timeout` | `10s` | `pgway`, `pgway-dp` | TCP dial timeout to upstream proxies |
-| `log_level` | `info` | all | `debug` \| `info` \| `warn` \| `error` |
+| Key | Env | Default | Used by | Description |
+|-----|-----|---------|---------|-------------|
+| `log_level` | `PGWAY_LOG_LEVEL` | `info` | all | `debug` \| `info` \| `warn` \| `error` |
+| `token` | `PGWAY_TOKEN` | *(empty)* | `pgctl` | Bearer for CP calls; prefer env or `~/.pgctl/credentials` |
+| `badger.path` | `PGWAY_BADGER_PATH` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
+| `badger.gc_interval` | `PGWAY_BADGER_GC_INTERVAL` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
+| `grpc.listen_addr` | `PGWAY_GRPC_LISTEN_ADDR` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
+| `grpc.keepalive_interval` | `PGWAY_GRPC_KEEPALIVE_INTERVAL` | `1m` | all | gRPC keepalive ping period; `0` disables |
+| `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
+| `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
+| `auth.token_ttl` | `PGWAY_AUTH_TOKEN_TTL` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
+| `auth.registration_token_ttl` | `PGWAY_AUTH_REGISTRATION_TOKEN_TTL` | `24h` | `pgway`, `pgway-cp` | Default TTL for single-use agent registration tokens |
+| `auth.agent_token_ttl` | `PGWAY_AUTH_AGENT_TOKEN_TTL` | `168h` | `pgway`, `pgway-cp` | Sliding TTL for per-agent tokens |
+| `agent.name` | `PGWAY_AGENT_NAME` | *(hostname)* | `pgway-dp` | Unique agent identity |
+| `agent.labels` | — | `{}` | `pgway-dp` | Labels advertised at Register |
+| `agent.state_path` | `PGWAY_AGENT_STATE_PATH` | `/var/lib/pgway/agent.json` | `pgway-dp` | Persisted `{agent_id, agent_token}` (dir `0700`, file `0600`) |
+| `agent.heartbeat_interval` | `PGWAY_AGENT_HEARTBEAT_INTERVAL` | `10s` | `pgway-dp` | Heartbeat period |
+| `agent.heartbeat_threshold` | `PGWAY_AGENT_HEARTBEAT_THRESHOLD` | `30s` | `pgway`, `pgway-cp` | Active vs disconnected boundary |
+| `agent.registration_token` | `PGWAY_AGENT_REGISTRATION_TOKEN` | *(empty)* | `pgway-dp` | First Register secret |
+| `proxy.max_request_body_bytes` | `PGWAY_PROXY_MAX_REQUEST_BODY_BYTES` | `10MiB` | `pgway`, `pgway-dp` | Cap for non-CONNECT bodies; `0` = unlimited |
+| `proxy.max_idle_conns` | `PGWAY_PROXY_MAX_IDLE_CONNS` | `1024` | `pgway`, `pgway-dp` | Global idle conn limit; `0` = unlimited |
+| `proxy.max_idle_conns_per_host` | `PGWAY_PROXY_MAX_IDLE_CONNS_PER_HOST` | `128` | `pgway`, `pgway-dp` | Idle conns per upstream host; must be `> 0` |
+| `proxy.idle_conn_timeout` | `PGWAY_PROXY_IDLE_CONN_TIMEOUT` | `90s` | `pgway`, `pgway-dp` | How long idle pooled connections are kept |
+| `proxy.dial_timeout` | `PGWAY_PROXY_DIAL_TIMEOUT` | `10s` | `pgway`, `pgway-dp` | TCP dial timeout to upstream proxies |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 
@@ -148,18 +145,26 @@ log_level: info
 
 ### All-in-one (`pgway`) — local
 
-```yaml
-# config.yml
-badger_path: ./var/lib
-grpc_listen_addr: ":9090"
-rest_listen_addr: ":8081"
-log_level: info
-token_ttl: 720h
+```toml
+# config.toml
+log_level = "info"
+
+[badger]
+path = "./var/lib"
+
+[grpc]
+listen_addr = ":9090"
+
+[rest]
+listen_addr = ":8081"
+
+[auth]
+token_ttl = "720h"
 ```
 
 ```bash
-./build/pgway --config ./config.yml
-# or from the directory that contains config.yml:
+./build/pgway --config ./config.toml
+# or from the directory that contains config.toml:
 ./build/pgway
 ```
 
@@ -167,48 +172,59 @@ token_ttl: 720h
 
 Same shape as all-in-one for storage and listen addresses; no entrypoint traffic.
 
-```yaml
-badger_path: /var/pgway/lib
-grpc_listen_addr: ":9090"
-rest_listen_addr: ":8081"
-log_level: info
+```toml
+log_level = "info"
+
+[badger]
+path = "/var/pgway/lib"
+
+[grpc]
+listen_addr = ":9090"
+
+[rest]
+listen_addr = ":8081"
 ```
 
 ### Data Plane agent (`pgway-dp`)
 
-`grpc_listen_addr` is the **CP address to dial**, not a local listen for gRPC admin APIs.
+`grpc.listen_addr` is the **CP address to dial**, not a local listen for gRPC admin APIs.
 
-```yaml
-# dp.yml
-grpc_listen_addr: "cp-host:9090"
-agent_name: edge-1
-agent_labels:
-  zone: edge
-agent_state_path: ./var/agent.json
-heartbeat_interval: 10s
-log_level: info
+```toml
+# dp.toml
+log_level = "info"
+
+[grpc]
+listen_addr = "cp-host:9090"
+
+[agent]
+name = "edge-1"
+labels = { zone = "edge" }
+state_path = "./var/agent.json"
+heartbeat_interval = "10s"
 ```
 
-First start needs a one-time registration token (created on the CP with `pgctl agent token create`); later starts reuse `agent_state_path`. Details belong in the agent / first-run guides.
+First start needs a one-time registration token (created on the CP with `pgctl agent token create`); later starts reuse `agent.state_path`. Details belong in the agent / first-run guides.
 
 ### CLI (`pgctl`)
 
 Often only needs how to reach the CP and a token:
 
-```yaml
+```toml
 # optional pgctl-oriented snippet
-grpc_listen_addr: "localhost:9090"
-token: ""   # or set PGWAY_TOKEN / use ~/.pgctl/credentials
+token = ""   # or set PGWAY_TOKEN / use ~/.pgctl/credentials
+
+[grpc]
+listen_addr = "localhost:9090"
 ```
 
 ```bash
-./build/pgctl --config ./config.yml get proxy
+./build/pgctl --config ./config.toml get proxy
 PGWAY_GRPC_LISTEN_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
 ```
 
 ## REST and the dashboard
 
-`rest_listen_addr` enables the Control Plane REST surface used by the Nuxt dashboard. That path is **experimental**: expect breaking changes and incomplete authentication. Prefer **gRPC + `pgctl`** for real configuration until the dashboard matures.
+`rest.listen_addr` enables the Control Plane REST surface used by the Nuxt dashboard. That path is **experimental**: expect breaking changes and incomplete authentication. Prefer **gRPC + `pgctl`** for real configuration until the dashboard matures.
 
 ## What’s next
 

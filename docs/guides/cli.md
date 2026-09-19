@@ -17,7 +17,7 @@ Typical dial:
 
 ```bash
 PGWAY_GRPC_LISTEN_ADDR=localhost:9090 ./build/pgctl …
-# or put grpc_listen_addr in the config file
+# or put grpc.listen_addr in the config file
 ```
 
 ## Auth
@@ -86,7 +86,7 @@ Distributed Data Planes only — not required for all-in-one `pgway`.
 
 ```bash
 REG=$(pgctl agent token create)
-PGWAY_REGISTRATION_TOKEN="$REG" ./build/pgway-dp --config ./dp.yml
+PGWAY_AGENT_REGISTRATION_TOKEN="$REG" ./build/pgway-dp --config ./dp.toml
 pgctl agent list
 ```
 
@@ -94,7 +94,7 @@ pgctl agent list
 
 ```bash
 # Fresh all-in-one box
-./build/pgway --config ./config.yml
+./build/pgway --config ./config.toml
 # … copy bootstrap_token from logs …
 ./build/pgctl init --bootstrap-token 'pgw_…'
 ./build/pgctl apply -f stack.yaml

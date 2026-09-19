@@ -12,7 +12,7 @@ flowchart TB
   end
   subgraph agents [Data Plane agents]
     RegTok[pgctl agent token create] --> DP[pgway-dp first start]
-    DP --> State[agent_state_path]
+    DP --> State[agent.state_path]
     State --> HB[Heartbeat / Watch]
   end
   Apply --> CP[Control Plane gRPC]
@@ -44,7 +44,7 @@ Everything else (apply, get, user admin, agent list/delete, Watch after register
 |-------|----------------|-----------------|----------|
 | **Bootstrap token** | CP log when **no users** exist | `pgctl init` | One-shot; new value if you restart before init |
 | **User session token** | `pgctl init` / `pgctl login` | `pgctl` → CP | Default `token_ttl` (e.g. `720h`); optional `--no-expiry` |
-| **Agent registration token** | `pgctl agent token create` | `pgway-dp` **first** Register | Single-use; default TTL `registration_token_ttl` |
+| **Agent registration token** | `pgctl agent token create` | `pgway-dp` **first** Register | Single-use; default TTL `auth.registration_token_ttl` |
 | **Agent token** | Issued at Register | `pgway-dp` (persisted) | Sliding `agent_token_ttl`; extended on heartbeat |
 
 !!! note "All-in-one"
@@ -109,20 +109,20 @@ Standalone Data Planes do **not** use user login. They authenticate with an **ag
 ./build/pgctl agent token create
 # → single-use registration token
 
-PGWAY_REGISTRATION_TOKEN='<registration-token>' \
-  ./build/pgway-dp --config ./dp.yml
+PGWAY_AGENT_REGISTRATION_TOKEN='<registration-token>' \
+  ./build/pgway-dp --config ./dp.toml
 ```
 
-`dp.yml` must dial the CP (`grpc_listen_addr`) and set at least `agent_name` / `agent_state_path` (see [Configuration](../getting-started/configuration.md)).
+`dp.toml` must dial the CP (`grpc.listen_addr`) and set at least `agent.name` / `agent.state_path` (see [Configuration](../getting-started/configuration.md)).
 
-On success, Register returns credentials written to `agent_state_path` (`{agent_id, agent_token}`; directory mode `0700`, file `0600`).
+On success, Register returns credentials written to `agent.state_path` (`{agent_id, agent_token}`; directory mode `0700`, file `0600`).
 
 ### Later starts
 
-Reuse `agent_state_path` — **no** registration token:
+Reuse `agent.state_path` — **no** registration token:
 
 ```bash
-./build/pgway-dp --config ./dp.yml
+./build/pgway-dp --config ./dp.toml
 ```
 
 Heartbeats (interval `heartbeat_interval`) extend the sliding agent token TTL. Status on the CP:
@@ -145,16 +145,16 @@ After delete (or expired token without heartbeats), the DP needs a **new** regis
 | Key | Role |
 |-----|------|
 | `token_ttl` | Default user session lifetime |
-| `registration_token_ttl` | Default agent registration token TTL |
+| `auth.registration_token_ttl` | Default agent registration token TTL |
 | `agent_token_ttl` | Sliding agent bearer lifetime |
 | `agent_heartbeat_threshold` | Active vs disconnected boundary |
 | `heartbeat_interval` | DP heartbeat period |
-| `agent_state_path` | Persisted agent credentials |
-| `registration_token` / `PGWAY_REGISTRATION_TOKEN` | First Register only |
+| `agent.state_path` | Persisted agent credentials |
+| `agent.registration_token` / `PGWAY_AGENT_REGISTRATION_TOKEN` | First Register only |
 
 ## Security notes
 
 - Treat bootstrap, registration, and session tokens as secrets.
-- Prefer env vars for secrets (`PGWAY_TOKEN`, `PGWAY_REGISTRATION_TOKEN`) over committing them in YAML.
+- Prefer env vars for secrets (`PGWAY_TOKEN`, `PGWAY_AGENT_REGISTRATION_TOKEN`) over committing them in YAML.
 - Do not expose unauthenticated REST / dashboard ports on untrusted networks.
 - mTLS between CP and DP is planned ([#47](https://github.com/aknEvrnky/pgway/issues/47)), not implemented yet.

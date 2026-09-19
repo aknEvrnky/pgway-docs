@@ -18,8 +18,8 @@ Assumes you already [built binaries](installation.md) and have a [config file](c
 ### 1. Start `pgway`
 
 ```bash
-./build/pgway --config ./config.yml
-# or, if config.yml is on a search path:
+./build/pgway --config ./config.toml
+# or, if config.toml is on a search path:
 ./build/pgway
 ```
 
@@ -151,7 +151,7 @@ Same admin bootstrap as above, plus **agent registration** so the standalone Dat
 ### 1. Start the Control Plane
 
 ```bash
-./build/pgway-cp --config ./cp.yml
+./build/pgway-cp --config ./cp.toml
 ```
 
 Look for the same `bootstrap_token` warn line and `grpc started` (there is no local `gateway started` on CP-only).
@@ -179,14 +179,14 @@ This step exists **only** for separate Data Plane processes:
 
 ### 4. Start the Data Plane
 
-DP config must dial the CP (`grpc_listen_addr`) and set agent identity / state path — see [Configuration](configuration.md).
+DP config must dial the CP (`grpc.listen_addr`) and set agent identity / state path — see [Configuration](configuration.md).
 
 ```bash
-PGWAY_REGISTRATION_TOKEN='<token-from-agent-token-create>' \
-  ./build/pgway-dp --config ./dp.yml
+PGWAY_AGENT_REGISTRATION_TOKEN='<token-from-agent-token-create>' \
+  ./build/pgway-dp --config ./dp.toml
 ```
 
-On success the DP writes `{agent_id, agent_token}` to `agent_state_path`. Later restarts reuse that file — **no** registration token required until you delete the agent or credentials are gone.
+On success the DP writes `{agent_id, agent_token}` to `agent.state_path`. Later restarts reuse that file — **no** registration token required until you delete the agent or credentials are gone.
 
 ```bash
 ./build/pgctl agent list    # active / passive / disconnected

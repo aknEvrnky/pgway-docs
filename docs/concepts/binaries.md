@@ -80,10 +80,10 @@ Run when you want a dedicated config service. Holds BadgerDB, auth, agent regist
 
 ### `pgway-dp`
 
-Edge (or colocated) gateway. Needs CP reachability (`grpc_listen_addr`), an **agent identity** (`agent_name`, labels), and either:
+Edge (or colocated) gateway. Needs CP reachability (`grpc.listen_addr`), an **agent identity** (`agent.name`, labels), and either:
 
-1. A one-time **registration token** (`PGWAY_REGISTRATION_TOKEN` / `pgctl agent token create`), or  
-2. Persisted credentials at `agent_state_path` from a previous register
+1. A one-time **registration token** (`PGWAY_AGENT_REGISTRATION_TOKEN` / `pgctl agent token create`), or  
+2. Persisted credentials at `agent.state_path` from a previous register
 
 After register, the DP heartbeats and watches for config changes. Stopping the process deregisters to a passive state; deleting the agent on the CP revokes credentials.
 
