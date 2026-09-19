@@ -39,6 +39,12 @@ pgctl apply --file proxy.yaml
 
 Multi-document YAML (`---` separators) is supported. Kind/version must match the [resource reference](../reference/index.md).
 
+`pgctl apply` sorts documents by dependency order before applying
+(`proxy` → `pool` → `balancer` → `router` → `flow` → `entrypoint`), so reverse file order still works.
+Single-resource gRPC apply (and dashboard/REST later) still requires bottom-up creation: referenced targets must already exist.
+
+Missing forward references return gRPC `FailedPrecondition` (same family as in-use deletes).
+
 ### Get
 
 ```bash
