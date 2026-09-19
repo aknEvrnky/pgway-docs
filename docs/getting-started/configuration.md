@@ -121,6 +121,12 @@ dial_timeout = "10s"
 enabled = true
 # How long successful lookups are reused. Must be > 0 when enabled.
 ttl = "5m"
+
+[dataplane]
+# setTimeout-style change-event coalesce window (pgway, pgway-dp). 0 disables.
+event_coalesce_window = "100ms"
+# Early flush when this many events land in one key before the window ends.
+event_coalesce_max_buffer = 256
 ```
 
 ## Keys
@@ -153,6 +159,8 @@ ttl = "5m"
 | `proxy.dial_timeout` | `PGWAY_PROXY_DIAL_TIMEOUT` | `10s` | `pgway`, `pgway-dp` | TCP dial timeout to upstream proxies |
 | `proxy.dns_cache.enabled` | `PGWAY_PROXY_DNS_CACHE_ENABLED` | `true` | `pgway`, `pgway-dp` | Cache upstream proxy hostname lookups; `false` = default resolver every dial |
 | `proxy.dns_cache.ttl` | `PGWAY_PROXY_DNS_CACHE_TTL` | `5m` | `pgway`, `pgway-dp` | How long successful lookups are reused; must be `> 0` when enabled |
+| `dataplane.event_coalesce_window` | `PGWAY_DATAPLANE_EVENT_COALESCE_WINDOW` | `100ms` | `pgway`, `pgway-dp` | Change-event coalesce delay; `0` disables (immediate dispatch) |
+| `dataplane.event_coalesce_max_buffer` | `PGWAY_DATAPLANE_EVENT_COALESCE_MAX_BUFFER` | `256` | `pgway`, `pgway-dp` | Early flush threshold per coalesce key; must be `>= 1` when window is enabled |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 
