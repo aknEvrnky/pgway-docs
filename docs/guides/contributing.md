@@ -75,7 +75,7 @@ Binaries: `pgway` (both), `pgway-cp`, `pgway-dp`, `pgctl`. See [Binaries & plane
 ### Testing and CI
 
 ```bash
-make tools
+make tools     # gotestsum + protoc-gen-go / protoc-gen-go-grpc (needs system protoc)
 make test      # gotestsum + -race
 go vet ./...
 make proto     # if .proto changed — CI checks gen/ drift

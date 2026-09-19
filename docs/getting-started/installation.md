@@ -11,6 +11,7 @@ For now: clone the repository and use **`go build`**, **`make build`**, or **`go
 
 - [Go](https://go.dev/dl/) **1.27** or newer (`go version`)
 - Git
+- [protoc](https://grpc.io/docs/protoc-installation/) for `make tools` / `make proto` (e.g. `brew install protobuf` or `apt install protobuf-compiler`)
 - Optional, only for dashboard development: [Bun](https://bun.sh/) or Node.js 20+ (not required for the gateway itself)
 
 ## Clone
@@ -38,11 +39,11 @@ This writes four binaries under `./build/`:
 ## Dev tools and tests
 
 ```bash
-make tools   # installs gotestsum (and other make helpers) into GOPATH/bin
+make tools   # gotestsum, protoc-gen-go, protoc-gen-go-grpc; requires system protoc
 make test    # runs the suite via gotestsum (-race)
 ```
 
-`make test` depends on `make tools`, so a fresh clone should not hit an “unknown command: gotestsum” error as long as `$(go env GOPATH)/bin` is on your `PATH`.
+`make test` / `make proto` depend on `make tools`. Put `$(go env GOPATH)/bin` on your `PATH` so `gotestsum` and the `protoc-gen-*` plugins resolve. Install the protobuf compiler separately (`brew install protobuf` or `apt install protobuf-compiler`) — `make tools` verifies `protoc` is available.
 
 ## Build a single binary
 
