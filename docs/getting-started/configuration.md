@@ -72,6 +72,10 @@ listen_addr = ":9090"
 keepalive_interval = "1m"
 # How long to wait for a keepalive ping ACK. Required when interval > 0.
 keepalive_timeout = "20s"
+# Per-client unary RPC token-bucket rate (tokens/sec). 0 disables.
+rate_limit_rps = 100
+# Token-bucket burst capacity. Required when rate_limit_rps > 0.
+rate_limit_burst = 200
 
 [rest]
 # REST API listen address (pgway, pgway-cp).
@@ -130,6 +134,8 @@ ttl = "5m"
 | `grpc.listen_addr` | `PGWAY_GRPC_LISTEN_ADDR` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
 | `grpc.keepalive_interval` | `PGWAY_GRPC_KEEPALIVE_INTERVAL` | `1m` | all | gRPC keepalive ping period; `0` disables |
 | `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
+| `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
+| `grpc.rate_limit_burst` | `PGWAY_GRPC_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
 | `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
 | `auth.token_ttl` | `PGWAY_AUTH_TOKEN_TTL` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
 | `auth.registration_token_ttl` | `PGWAY_AUTH_REGISTRATION_TOKEN_TTL` | `24h` | `pgway`, `pgway-cp` | Default TTL for single-use agent registration tokens |
