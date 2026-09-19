@@ -137,7 +137,8 @@ event_coalesce_max_buffer = 256
 | `token` | `PGWAY_TOKEN` | *(empty)* | `pgctl` | Bearer for CP calls; prefer env or `~/.pgctl/credentials` |
 | `badger.path` | `PGWAY_BADGER_PATH` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
 | `badger.gc_interval` | `PGWAY_BADGER_GC_INTERVAL` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
-| `grpc.listen_addr` | `PGWAY_GRPC_LISTEN_ADDR` | `:9090` | all | CP listen address; DP/`pgctl` dial this host:port |
+| `grpc.listen_addr` | `PGWAY_GRPC_LISTEN_ADDR` | `:9090` | all | CP **listen** address (`pgway` / `pgway-cp`) |
+| `grpc.dial_addr` | `PGWAY_GRPC_DIAL_ADDR` | *(empty → listen_addr)* | `pgway-dp`, `pgctl` | CP address to **dial**; leave empty to reuse `listen_addr` locally |
 | `grpc.keepalive_interval` | `PGWAY_GRPC_KEEPALIVE_INTERVAL` | `1m` | all | gRPC keepalive ping period; `0` disables |
 | `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
 | `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
@@ -210,14 +211,14 @@ listen_addr = ":8081"
 
 ### Data Plane agent (`pgway-dp`)
 
-`grpc.listen_addr` is the **CP address to dial**, not a local listen for gRPC admin APIs.
+Prefer `grpc.dial_addr` for the **CP address to dial**. If empty, clients fall back to `grpc.listen_addr` (legacy / local convenience).
 
 ```toml
 # dp.toml
 log_level = "info"
 
 [grpc]
-listen_addr = "cp-host:9090"
+dial_addr = "cp-host:9090"
 
 [agent]
 name = "edge-1"
@@ -237,12 +238,12 @@ Often only needs how to reach the CP and a token:
 token = ""   # or set PGWAY_TOKEN / use ~/.pgctl/credentials
 
 [grpc]
-listen_addr = "localhost:9090"
+dial_addr = "localhost:9090"
 ```
 
 ```bash
 ./build/pgctl --config ./config.toml get proxy
-PGWAY_GRPC_LISTEN_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
+PGWAY_GRPC_DIAL_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
 ```
 
 ## REST and the dashboard
