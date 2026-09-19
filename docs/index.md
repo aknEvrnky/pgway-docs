@@ -93,7 +93,7 @@ Work is organized around GitHub milestones. High-level direction:
 
 Other near-term product goals (from the main project README): SOCKS5 support, Prometheus-style metrics, health checks with automatic pool recovery, and proper auth for REST / dashboard.
 
-Smaller open items (connection pooling, DNS cache, rate limits, tunnel hardening, etc.) live as optimization issues on GitHub and will be tackled as capacity allows.
+Smaller open items (DNS cache, REST rate limits, etc.) live as optimization issues on GitHub and will be tackled as capacity allows.
 
 ## This documentation site
 

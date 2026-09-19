@@ -105,6 +105,12 @@ registration_token: ""
 # Accepts integers or human sizes (10MiB, 512KiB, 100MB). Also PGWAY_MAX_REQUEST_BODY_BYTES.
 max_request_body_bytes: 10MiB
 
+# Per-proxy http.Transport pool (pgway, pgway-dp). 0 max_idle_conns = unlimited.
+proxy_max_idle_conns: 1024
+proxy_max_idle_conns_per_host: 128
+proxy_idle_conn_timeout: 90s
+proxy_dial_timeout: 10s
+
 # Global log level: debug | info | warn | error (also PGWAY_LOG_LEVEL).
 log_level: info
 ```
@@ -130,6 +136,10 @@ log_level: info
 | `heartbeat_interval` | `10s` | `pgway-dp` | Heartbeat period |
 | `registration_token` | *(empty)* | `pgway-dp` | First Register secret; prefer `PGWAY_REGISTRATION_TOKEN` |
 | `max_request_body_bytes` | `10MiB` | `pgway`, `pgway-dp` | Cap for non-CONNECT proxy request bodies; `0` = unlimited; accepts `10MiB` / `512KiB` / bare bytes |
+| `proxy_max_idle_conns` | `1024` | `pgway`, `pgway-dp` | Global idle conn limit per upstream transport; `0` = unlimited |
+| `proxy_max_idle_conns_per_host` | `128` | `pgway`, `pgway-dp` | Idle conns per upstream host; must be `> 0` |
+| `proxy_idle_conn_timeout` | `90s` | `pgway`, `pgway-dp` | How long idle pooled connections are kept |
+| `proxy_dial_timeout` | `10s` | `pgway`, `pgway-dp` | TCP dial timeout to upstream proxies |
 | `log_level` | `info` | all | `debug` \| `info` \| `warn` \| `error` |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
