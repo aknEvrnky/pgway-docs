@@ -35,7 +35,7 @@ Each rule `target` must be an existing LoadBalancer `metadata.name`.
 
 | Type | `value` | Notes |
 |------|---------|--------|
-| `host` | glob | Against request host (`filepath.Match` style), e.g. `*.cdn.example.com` |
+| `host` | glob | Hostname only (**port stripped**); `filepath.Match` style, e.g. `*.cdn.example.com` |
 | `host_suffix` | suffix | Host ends with value; port stripped; leading `.` normalized |
 | `path_prefix` | prefix | `URL.Path` prefix, e.g. `/api/` |
 | `path_regex` | regex | Full regex against path |

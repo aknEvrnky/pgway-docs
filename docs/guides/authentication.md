@@ -5,7 +5,7 @@ pgway’s Control Plane authenticates **operators** (users / `pgctl`) and, in di
 ```mermaid
 flowchart TB
   subgraph users [Operators]
-    Log[CP log bootstrap_token] --> Init[pgctl init]
+    Log[CP stderr bootstrap token] --> Init[pgctl init]
     Init --> Cred[~/.pgctl/credentials]
     Login[pgctl login] --> Cred
     Cred --> Apply[pgctl apply / get / user / agent]
@@ -42,7 +42,7 @@ Everything else (apply, get, user admin, agent list/delete, Watch after register
 
 | Token | Who creates it | Who consumes it | Lifetime |
 |-------|----------------|-----------------|----------|
-| **Bootstrap token** | CP log when **no users** exist | `pgctl init` | One-shot; new value if you restart before init |
+| **Bootstrap token** | CP **stderr** when **no users** exist | `pgctl init` | One-shot; new value if you restart before init |
 | **User session token** | `pgctl init` / `pgctl login` | `pgctl` → CP | Default `token_ttl` (e.g. `720h`); optional `--no-expiry` |
 | **Agent registration token** | `pgctl agent token create` | `pgway-dp` **first** Register | Single-use; default TTL `auth.registration_token_ttl` |
 | **Agent token** | Issued at Register | `pgway-dp` (persisted) | Sliding `agent_token_ttl`; extended on heartbeat |
@@ -55,11 +55,11 @@ Everything else (apply, get, user admin, agent list/delete, Watch after register
 ### Bootstrap (empty install)
 
 1. Start `pgway` or `pgway-cp` with empty Badger user store.
-2. Read `bootstrap_token` from the warn log line.
+2. Copy the bootstrap token from **stderr** (`pgway: no users found — initialize with:`).
 3. Run:
 
 ```bash
-./build/pgctl init --bootstrap-token '<token-from-log>'
+./build/pgctl init --bootstrap-token '<token-from-stderr>'
 ```
 
 Creates the first **admin**, issues a session token, writes `~/.pgctl/credentials`.

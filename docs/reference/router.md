@@ -47,7 +47,7 @@ Validated on apply (domain):
 
 | `type` | `value` | Behavior |
 |--------|---------|----------|
-| `host` | glob pattern | Match `Host` (`filepath.Match` style) |
+| `host` | glob pattern | Match hostname (`filepath.Match`); **port stripped** (same as `host_suffix`) |
 | `host_suffix` | suffix | Host suffix (port stripped; leading `.` normalized) |
 | `path_prefix` | prefix | Prefix of request path |
 | `path_regex` | regex | Regex against request path |

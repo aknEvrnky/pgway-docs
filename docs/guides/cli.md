@@ -109,7 +109,7 @@ pgctl agent list
 ```bash
 # Fresh all-in-one box
 ./build/pgway --config ./config.toml
-# … copy bootstrap_token from logs …
+# … copy bootstrap token from CP stderr …
 ./build/pgctl init --bootstrap-token 'pgw_…'
 ./build/pgctl apply -f stack.yaml
 ./build/pgctl get entrypoint

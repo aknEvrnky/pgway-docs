@@ -7,7 +7,7 @@ Two ways to bring pgway up:
 | **All-in-one** | `pgway` | **No** — CP and DP share the process; no agent bootstrap |
 | **Distributed** | `pgway-cp` + `pgway-dp` (+ `pgctl`) | **Yes** — after admin init, create an agent registration token with `pgctl agent token create` |
 
-Both modes need the **user** bootstrap token from CP logs (`pgctl init`). Only the split CP/DP layout adds the **agent** registration step.
+Both modes need the **user** bootstrap token from CP **stderr** on first start (`pgctl init`). Only the split CP/DP layout adds the **agent** registration step.
 
 Assumes you already [built binaries](installation.md) and have a [config file](configuration.md).
 
@@ -23,25 +23,26 @@ Assumes you already [built binaries](installation.md) and have a [config file](c
 ./build/pgway
 ```
 
-On a **first** start with an empty user store, the Control Plane logs a one-time bootstrap token and refuses normal APIs until you run `pgctl init`. Example log:
+On a **first** start with an empty user store, the Control Plane prints a one-time bootstrap token to **stderr** (it is **not** written to structured logs) and refuses normal APIs until you run `pgctl init`. Example:
+
+```text
+pgway: no users found — initialize with:
+  pgctl init --bootstrap-token pgw_…
+```
+
+Structured logs still show a warn without the secret:
 
 ```json
-{"level":"info","timestamp":"2026-09-13T23:08:27.495+0300","caller":"badger/logger.go:19","msg":"All 0 tables opened in 0s\n","pid":74639}
-{"level":"info","timestamp":"2026-09-13T23:08:27.500+0300","caller":"badger/logger.go:19","msg":"Discard stats nextEmptySlot: 0\n","pid":74639}
-{"level":"info","timestamp":"2026-09-13T23:08:27.500+0300","caller":"badger/logger.go:19","msg":"Set nextTxnTs to 0","pid":74639}
-{"level":"warn","timestamp":"2026-09-13T23:08:27.500+0300","caller":"auth/service.go:71","msg":"no users found — initialize with: pgctl init --bootstrap-token <token>","pid":74639,"bootstrap_token":"pgw_fOX1Oyq44fJzKapmOcuVM5um97MsLhlyG_UHnFNuKGQ"}
-{"level":"info","timestamp":"2026-09-13T23:08:27.501+0300","caller":"pgway/main.go:118","msg":"grpc started","pid":74639,"addr":":9090"}
-{"level":"info","timestamp":"2026-09-13T23:08:27.501+0300","caller":"pgway/main.go:123","msg":"gateway started","pid":74639}
-{"level":"info","timestamp":"2026-09-13T23:08:27.501+0300","caller":"pgway/main.go:128","msg":"restapi started","pid":74639}
-{"level":"info","timestamp":"2026-09-13T23:08:27.501+0300","caller":"pgway/main.go:133","msg":"event consumer started","pid":74639}
-{"level":"info","timestamp":"2026-09-13T23:08:27.501+0300","caller":"rest/adapter.go:33","msg":"starting rest server","pid":74639,"addr":":8081"}
+{"level":"warn","msg":"no users found — initialize with pgctl init (bootstrap token written to stderr only)", ...}
+{"level":"info","msg":"grpc started","addr":":9090"}
+{"level":"info","msg":"gateway started"}
 ```
 
 What matters:
 
 | Field / line | Meaning |
 |--------------|---------|
-| `bootstrap_token` | One-time secret for `pgctl init` (example value is illustrative — use **yours**) |
+| stderr `pgctl init --bootstrap-token …` | One-time secret for `pgctl init` (use **your** value) |
 | `grpc started` / `addr` | CP gRPC listen (default `:9090`) — `pgctl` dials this |
 | `gateway started` | Local Data Plane ready (no separate agent) |
 | `restapi started` | REST / dashboard port (default `:8081`) — **experimental** |
@@ -54,7 +55,7 @@ What matters:
 ### 2. Initialize the admin user
 
 ```bash
-./build/pgctl init --bootstrap-token 'pgw_…'   # paste the token from the log
+./build/pgctl init --bootstrap-token 'pgw_…'   # paste the token from stderr
 ```
 
 This creates the first admin and stores a session under `~/.pgctl/credentials`. Later:
@@ -154,7 +155,7 @@ Same admin bootstrap as above, plus **agent registration** so the standalone Dat
 ./build/pgway-cp --config ./cp.toml
 ```
 
-Look for the same `bootstrap_token` warn line and `grpc started` (there is no local `gateway started` on CP-only).
+Look for the stderr bootstrap-token line and `grpc started` (there is no local `gateway started` on CP-only).
 
 ### 2. Initialize the admin
 
