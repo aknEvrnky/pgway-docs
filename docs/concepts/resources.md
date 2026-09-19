@@ -23,7 +23,7 @@ flowchart LR
 | **Router** | No | Condition-based choice of which balancer to use |
 | **LoadBalancer** | Yes | Strategy in front of exactly one pool |
 | **Pool** | Yes* | Group of proxies (static members or dynamic labels) |
-| **Proxy** | Yes* | One upstream (`http://…` today; SOCKS5 planned) |
+| **Proxy** | Yes* | One upstream (`http://…` or `socks5://…`) |
 
 \*A pool without resolvable proxies cannot serve traffic. Proxies can also sit behind a balancer indirectly via the pool.
 
@@ -39,7 +39,7 @@ flowchart LR
 
 A single upstream endpoint. Identity is `metadata.name`. Optional **labels** (e.g. `provider`, `region`) are how **dynamic pools** discover members.
 
-Credentials can live in a URL shorthand (`http://user:pass@host:port`) or as explicit fields. Protocol for MVP is **HTTP**; SOCKS5 is on the roadmap.
+Credentials can live in a URL shorthand (`http://user:pass@host:port` or `socks5://user:pass@host:port`) or as explicit fields. Upstream protocols: **HTTP** and **SOCKS5**. Clients still connect to pgway with the HTTP proxy protocol (CONNECT + plain HTTP).
 
 ## Pool
 

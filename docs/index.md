@@ -1,6 +1,6 @@
 # Welcome
 
-**pgway** is a proxy gateway for managing HTTP (and later SOCKS5) upstream proxies through a single, stable entry point. You register proxies from your providers; clients always talk to pgway. When upstream URLs change, the entry point stays the same.
+**pgway** is a proxy gateway for managing HTTP and SOCKS5 upstream proxies through a single, stable entry point. You register proxies from your providers; clients always talk to pgway. When upstream URLs change, the entry point stays the same.
 
 ```text
 Client → pgway (Gateway) → Upstream Proxy Pool → Target Server
@@ -24,6 +24,7 @@ Upstream proxy providers rotate endpoints and credentials often. pgway gives you
 | Area | Status |
 |------|--------|
 | HTTP proxy + CONNECT tunneling | Ready |
+| SOCKS5 upstream proxies (client entrypoint remains HTTP) | Ready |
 | Entrypoint → Flow → (optional Router) → LoadBalancer → Pool → Proxy | Ready |
 | Static and dynamic (label-selector) pools | Ready |
 | Load balancing: round-robin, weighted, least-bytes | Ready |
@@ -34,7 +35,6 @@ Upstream proxy providers rotate endpoints and credentials often. pgway gives you
 | Token auth + user management on gRPC | Ready |
 | BadgerDB-backed config store | Ready |
 | Web dashboard (Nuxt) + REST surface | Experimental — not ready |
-| SOCKS5 upstream | Planned |
 | Health checks / auto pool recovery | Planned |
 | Metrics / OpenTelemetry | Planned |
 
@@ -91,7 +91,7 @@ Work is organized around GitHub milestones. High-level direction:
 4. **Production readiness** — Docker images, goreleaser / multi-platform distribution, CI build matrix.
 5. **Dashboard** — dedicated Nuxt admin UI and REST endpoints; **explicitly experimental** until these issues land.
 
-Other near-term product goals (from the main project README): SOCKS5 support, Prometheus-style metrics, health checks with automatic pool recovery, and proper auth for REST / dashboard.
+Other near-term product goals (from the main project README): Prometheus-style metrics, health checks with automatic pool recovery, and proper auth for REST / dashboard.
 
 Smaller open items (DNS cache, REST rate limits, etc.) live as optimization issues on GitHub and will be tackled as capacity allows.
 

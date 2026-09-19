@@ -17,7 +17,7 @@ Listen address where clients connect. Points at a **Flow**.
 ## Validation & notes
 
 - Schema requires `protocol`, `host`, non-zero `port`, and `flow_id`.
-- Domain protocols include `http`, `https`, `socks5`; the implemented client path today is **HTTP proxy** (CONNECT + plain HTTP).
+- Entrypoint `protocol` for clients today is **HTTP proxy** (CONNECT + plain HTTP). Upstream proxies may still be HTTP or SOCKS5; that is configured on the **Proxy** resource, not the entrypoint.
 - Multiple entrypoints can run in one Data Plane process on different ports.
 - After apply, the Data Plane hot-reloads and binds the listener (all-in-one or `pgway-dp`).
 
