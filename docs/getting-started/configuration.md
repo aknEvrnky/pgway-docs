@@ -110,6 +110,13 @@ max_idle_conns = 1024
 max_idle_conns_per_host = 128
 idle_conn_timeout = "90s"
 dial_timeout = "10s"
+
+[proxy.dns_cache]
+# Fixed-TTL cache for upstream proxy hostname resolution (pgway, pgway-dp).
+# enabled=false uses the default resolver on every dial.
+enabled = true
+# How long successful lookups are reused. Must be > 0 when enabled.
+ttl = "5m"
 ```
 
 ## Keys
@@ -138,6 +145,8 @@ dial_timeout = "10s"
 | `proxy.max_idle_conns_per_host` | `PGWAY_PROXY_MAX_IDLE_CONNS_PER_HOST` | `128` | `pgway`, `pgway-dp` | Idle conns per upstream host; must be `> 0` |
 | `proxy.idle_conn_timeout` | `PGWAY_PROXY_IDLE_CONN_TIMEOUT` | `90s` | `pgway`, `pgway-dp` | How long idle pooled connections are kept |
 | `proxy.dial_timeout` | `PGWAY_PROXY_DIAL_TIMEOUT` | `10s` | `pgway`, `pgway-dp` | TCP dial timeout to upstream proxies |
+| `proxy.dns_cache.enabled` | `PGWAY_PROXY_DNS_CACHE_ENABLED` | `true` | `pgway`, `pgway-dp` | Cache upstream proxy hostname lookups; `false` = default resolver every dial |
+| `proxy.dns_cache.ttl` | `PGWAY_PROXY_DNS_CACHE_TTL` | `5m` | `pgway`, `pgway-dp` | How long successful lookups are reused; must be `> 0` when enabled |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 
