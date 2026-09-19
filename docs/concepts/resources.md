@@ -79,6 +79,11 @@ Without a router, the flow’s default `balancer_id` handles all traffic.
 
 Client → entrypoint → flow (router?) → load balancer → pool → proxy → target.
 
+## Deleting resources
+
+Deletes refuse if an upstream resource still holds an explicit reference (gRPC `FailedPrecondition`).
+Safe order: **entrypoint → flow → router → balancer → pool → proxy**. Entrypoints have no reverse refs and can always be deleted.
+
 ## Control Plane vs Data Plane (resources in motion)
 
 Resources are written to the **Control Plane** (BadgerDB) via gRPC / `pgctl` (and experimental REST). The **Data Plane** loads them into memory and serves traffic. Config changes can hot-reload (in-process or via agent Watch in distributed mode) without rewriting this mental model — only *where* the config is applied changes.

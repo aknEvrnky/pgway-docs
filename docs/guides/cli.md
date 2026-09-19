@@ -64,6 +64,14 @@ pgctl delete flow <name>
 pgctl delete entrypoint <name>
 ```
 
+Deletes are **reject-only**: if another resource still references the target, the API returns
+gRPC `FailedPrecondition` and names the dependents. Safe teardown order:
+
+`entrypoint` → `flow` → `router` → `balancer` → `pool` → `proxy`
+
+A proxy listed in a **static** pool cannot be deleted until removed from (or the pool deleted).
+A proxy matched only by a **dynamic** pool selector may be deleted.
+
 ## Users (admin)
 
 | Command | Description |
