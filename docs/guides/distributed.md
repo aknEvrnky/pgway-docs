@@ -100,7 +100,27 @@ Once the DP has bootstrapped and bound listeners, proxy traffic can continue on 
 
 Cold start with CP down is still fatal (no disk last-known-good). Expired/revoked agent tokens still exit the process (re-register with a new registration token).
 
-Process readiness HTTP probes will consume the same link state when [#60](https://github.com/aknEvrnky/pgway/issues/60) lands. Under `fail_closed`, rejected requests include `Retry-After` set to `cp_disconnect_unreachable_threshold` (seconds).
+When `probes.enabled` is true, `/readyz` follows **rejecting** link state: not ready only when the DP is `fail_closed` **and** `unreachable` (`cp_unreachable`). Under `fail_open`, readiness stays ready so orchestrators keep routing while the DP serves stale config. Under `fail_closed`, rejected proxy requests include `Retry-After` set to `cp_disconnect_unreachable_threshold` (seconds).
+
+### Process probes (all binaries)
+
+Opt-in dedicated listener (`probes.enabled`, default off). Prefer binding to loopback or a cluster-internal address (e.g. `127.0.0.1:8082` or a Service-only port) — do not expose probes on public interfaces. Paths are fixed:
+
+| Path | Meaning |
+|------|---------|
+| `GET /healthz` | Liveness — always `200` `ok` while the probe server answers |
+| `GET /readyz` | Readiness — `200` `ok` or `503` with a short reason (`shutting_down`, `storage_unavailable`, `grpc_not_serving`, `cp_unreachable`) |
+
+**Checks:** CP / all-in-one → shutdown, Badger ping, gRPC serving. DP → shutdown, and `CPLinkStatus.Rejecting` (fail_closed + unreachable). Empty entrypoint sets are still ready.
+
+```yaml
+livenessProbe:
+  httpGet: { path: /healthz, port: 8082 }
+  periodSeconds: 10
+readinessProbe:
+  httpGet: { path: /readyz, port: 8082 }
+  periodSeconds: 5
+```
 
 ### Outage behaviour (operator view)
 

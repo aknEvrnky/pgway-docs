@@ -81,6 +81,13 @@ rate_limit_burst = 200
 # REST API listen address (pgway, pgway-cp).
 listen_addr = ":8081"
 
+[probes]
+# Opt-in process liveness/readiness HTTP listener (K8s probes). Off by default.
+enabled = false
+# Dedicated bind address — prefer loopback or cluster-internal (e.g. 127.0.0.1:8082).
+# Do not reuse entrypoint / gRPC / REST ports; avoid binding on public interfaces.
+listen_addr = ":8082"
+
 [auth]
 # Default lifetime of login-issued tokens (pgway, pgway-cp).
 token_ttl = "720h"
@@ -150,6 +157,8 @@ cp_disconnect_recover_threshold = "0s"
 | `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
 | `grpc.rate_limit_burst` | `PGWAY_GRPC_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
 | `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
+| `probes.enabled` | `PGWAY_PROBES_ENABLED` | `false` | all | Start dedicated `/healthz` + `/readyz` listener |
+| `probes.listen_addr` | `PGWAY_PROBES_LISTEN_ADDR` | `:8082` | all | Probe bind address; prefer `127.0.0.1:8082` or cluster-internal; do not expose publicly |
 | `auth.token_ttl` | `PGWAY_AUTH_TOKEN_TTL` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
 | `auth.registration_token_ttl` | `PGWAY_AUTH_REGISTRATION_TOKEN_TTL` | `24h` | `pgway`, `pgway-cp` | Default TTL for single-use agent registration tokens |
 | `auth.agent_token_ttl` | `PGWAY_AUTH_AGENT_TOKEN_TTL` | `168h` | `pgway`, `pgway-cp` | Sliding TTL for per-agent tokens |
