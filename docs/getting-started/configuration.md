@@ -146,6 +146,16 @@ cp_disconnect_strategy = "fail_open"
 cp_disconnect_unreachable_threshold = "30s"
 # Hysteresis before leaving unreachable once proofs are fresh again. 0 = immediate.
 cp_disconnect_recover_threshold = "0s"
+
+[otel]
+# Opt-in OpenTelemetry metrics (OTLP/gRPC push). Off by default.
+enabled = false
+# OTLP/gRPC collector host:port (no scheme).
+endpoint = "localhost:4317"
+# Resource service.name; empty → binary default (pgway / pgway-cp / pgway-dp).
+service_name = ""
+# Periodic metric export interval.
+export_interval = "15s"
 ```
 
 ## Keys
@@ -187,6 +197,11 @@ cp_disconnect_recover_threshold = "0s"
 | `dataplane.cp_disconnect_strategy` | `PGWAY_DATAPLANE_CP_DISCONNECT_STRATEGY` | `fail_open` | `pgway-dp` | `fail_open` \| `fail_closed` when CP unreachable |
 | `dataplane.cp_disconnect_unreachable_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_UNREACHABLE_THRESHOLD` | `30s` | `pgway-dp` | Both proofs stale, then this long → unreachable (≈ up to 2× after CP death) |
 | `dataplane.cp_disconnect_recover_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_RECOVER_THRESHOLD` | `0s` | `pgway-dp` | Hysteresis leaving unreachable; `0` = immediate |
+| `otel.enabled` | `PGWAY_OTEL_ENABLED` | `false` | all | Enable OTLP/gRPC metrics push |
+| `otel.endpoint` | `PGWAY_OTEL_ENDPOINT` | `localhost:4317` | all | OTLP/gRPC collector `host:port` (no scheme); required when enabled |
+| `otel.insecure` | `PGWAY_OTEL_INSECURE` | `false` | all | Plaintext OTLP/gRPC (no TLS); default `false` = TLS to the collector |
+| `otel.service_name` | `PGWAY_OTEL_SERVICE_NAME` | *(binary name)* | all | Resource `service.name`; empty → `pgway` / `pgway-cp` / `pgway-dp` |
+| `otel.export_interval` | `PGWAY_OTEL_EXPORT_INTERVAL` | `15s` | all | Periodic export interval; must be `> 0` when enabled |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 

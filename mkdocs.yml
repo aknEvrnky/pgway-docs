@@ -95,3 +95,5 @@ nav:
       - Distributed mode: guides/distributed.md
       - Dashboard: guides/dashboard.md
       - Contributing: guides/contributing.md
+  - Reference:
+      - Metrics: reference/metrics.md
