@@ -23,6 +23,8 @@ Export uses **TLS by default**. Set `otel.insecure = true` only when the collect
 | `pgway.proxy.bytes` | counter | `By` | `entrypoint`, `direction`, `protocol` |
 | `pgway.proxy.active` | up-down counter | `{connection}` | `protocol` |
 
+`pgway.proxy.duration` uses explicit bucket boundaries (seconds): `0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300`.
+
 ### Attribute values
 
 | Attribute | Values |
@@ -36,7 +38,7 @@ Export uses **TLS by default**. Set `otel.insecure = true` only when the collect
 
 - `ok` — successful HTTP forward or CONNECT tunnel completion
 - `timeout` — upstream/gateway timeout (HTTP 504)
-- `rejected` — fail_closed 503, body too large (413), missing entrypoint
+- `rejected` — fail_closed 503, body too large (413), missing entrypoint, no matching flow/pool/rule (no upstream selected)
 - `error` — other failures (502, dial/DNS, etc.)
 
 Labels such as `proxy_id` / `pool_id` are **not** exported (cardinality).
@@ -48,10 +50,14 @@ Labels such as `proxy_id` / `pool_id` are **not** exported (cardinality).
 | `pgway.cp.rpc.requests` | counter | `{request}` | `method`, `result` |
 | `pgway.cp.rpc.duration` | histogram | `s` | `method`, `result` |
 
+Both duration histograms share the same explicit bucket boundaries (seconds): `0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300`.
+
 | Attribute | Values |
 |-----------|--------|
 | `method` | Short RPC name (e.g. `ApplyProxy`, `ListAgents`) — last path segment of the gRPC full method |
-| `result` | `ok`, `error` |
+| `result` | `ok`, `rejected`, `timeout`, `error` |
+
+**`result` mapping:** `rejected` — client-side rejections (unauthenticated, permission denied, rate limited, invalid argument); `timeout` — deadline exceeded; `error` — any other handler failure.
 
 Stream RPCs (e.g. Watch) are not counted in this release.
 

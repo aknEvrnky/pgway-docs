@@ -148,10 +148,12 @@ cp_disconnect_unreachable_threshold = "30s"
 cp_disconnect_recover_threshold = "0s"
 
 [otel]
-# Opt-in OpenTelemetry metrics (OTLP/gRPC push). Off by default.
+# Opt-in OpenTelemetry metrics (OTLP/gRPC push to your collector). Off by default.
 enabled = false
 # OTLP/gRPC collector host:port (no scheme).
 endpoint = "localhost:4317"
+# Use plaintext OTLP/gRPC (no TLS). Default false = TLS to the collector.
+insecure = false
 # Resource service.name; empty → binary default (pgway / pgway-cp / pgway-dp).
 service_name = ""
 # Periodic metric export interval.
