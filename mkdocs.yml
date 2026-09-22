@@ -93,6 +93,7 @@ nav:
       - Routing: guides/routing.md
       - CLI: guides/cli.md
       - Distributed mode: guides/distributed.md
+      - Observability: guides/observability.md
       - Dashboard: guides/dashboard.md
       - Contributing: guides/contributing.md
   - Reference:

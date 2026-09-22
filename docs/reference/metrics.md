@@ -2,7 +2,7 @@
 
 pgway exports **OpenTelemetry metrics** over **OTLP/gRPC** (push) when `[otel] enabled = true`. There is no Prometheus `/metrics` scrape endpoint.
 
-Point `otel.endpoint` at your collector; scrape Prometheus / build Grafana dashboards from your own stack. See [Configuration](../getting-started/configuration.md) for keys.
+Point `otel.endpoint` at your collector; scrape Prometheus / build Grafana dashboards from your own stack — or run the bundled [Observability stack](../guides/observability.md). See [Configuration](../getting-started/configuration.md) for keys.
 
 Export uses **TLS by default**. Set `otel.insecure = true` only when the collector listens on plaintext OTLP/gRPC (e.g. a local dev collector).
 
