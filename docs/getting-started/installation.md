@@ -2,7 +2,7 @@
 
 pgway publishes **GitHub Release** archives and a **GHCR** image when a SemVer tag is pushed (for example `v0.1.0-beta.1`). Until you have a tag you care about, build from source or from the repo `Dockerfile`.
 
-Releases are **manual**: merge to `main`, then tag when ready. Tag pushes run GoReleaser in CI (binaries + `ghcr.io/aknEvrnky/pgway:<version>`). Pre-release tags (`-beta`, `-rc`, …) create GitHub pre-releases automatically. There is no auto-release on every main merge.
+Releases are **manual**: merge to `main`, then tag when ready. Tag pushes run GoReleaser in CI (binaries + `ghcr.io/aknevrnky/pgway:<version>`). Pre-release tags (`-beta`, `-rc`, …) create GitHub pre-releases automatically. There is no auto-release on every main merge.
 
 ## Prerequisites
 
@@ -35,8 +35,8 @@ pgway -version
 Published images contain all four binaries; default entrypoint is all-in-one `pgway`:
 
 ```bash
-docker pull ghcr.io/aknEvrnky/pgway:0.1.0-beta.1   # use the tag from the release
-docker run --rm --entrypoint /usr/local/bin/pgctl ghcr.io/aknEvrnky/pgway:0.1.0-beta.1 version
+docker pull ghcr.io/aknevrnky/pgway:0.1.0-beta.1   # use the tag from the release
+docker run --rm --entrypoint /usr/local/bin/pgctl ghcr.io/aknevrnky/pgway:0.1.0-beta.1 version
 ```
 
 ## Build all binaries (from source)
