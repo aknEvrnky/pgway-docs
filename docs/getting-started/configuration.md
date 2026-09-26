@@ -78,6 +78,10 @@ rate_limit_rps = 100
 rate_limit_burst = 200
 
 [rest]
+# Start the REST API (dashboard backend; experimental). On by default for
+# backward compatibility — set to false when the dashboard is not used,
+# especially on untrusted networks (auth is incomplete).
+enabled = true
 # REST API listen address (pgway, pgway-cp).
 listen_addr = ":8081"
 
@@ -179,7 +183,8 @@ trace_sample_ratio = 0.1
 | `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
 | `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
 | `grpc.rate_limit_burst` | `PGWAY_GRPC_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
-| `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `:8081` | `pgway`, `pgway-cp` | REST API (dashboard; **experimental**, auth incomplete) |
+| `rest.enabled` | `PGWAY_REST_ENABLED` | `true` | `pgway`, `pgway-cp` | Start the REST API (dashboard; **experimental**, auth incomplete) |
+| `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `:8081` | `pgway`, `pgway-cp` | REST API bind address |
 | `probes.enabled` | `PGWAY_PROBES_ENABLED` | `false` | all | Start dedicated `/healthz` + `/readyz` listener |
 | `probes.listen_addr` | `PGWAY_PROBES_LISTEN_ADDR` | `:8082` | all | Probe bind address; prefer `127.0.0.1:8082` or cluster-internal; do not expose publicly |
 | `auth.token_ttl` | `PGWAY_AUTH_TOKEN_TTL` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
@@ -229,6 +234,7 @@ path = "./var/lib"
 listen_addr = ":9090"
 
 [rest]
+enabled = true
 listen_addr = ":8081"
 
 [auth]
@@ -297,7 +303,7 @@ PGWAY_GRPC_DIAL_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
 
 ## REST and the dashboard
 
-`rest.listen_addr` enables the Control Plane REST surface used by the Nuxt dashboard. That path is **experimental**: expect breaking changes and incomplete authentication. Prefer **gRPC + `pgctl`** for real configuration until the dashboard matures.
+`rest.enabled` starts the Control Plane REST surface used by the Nuxt dashboard (bound to `rest.listen_addr`). That path is **experimental**: expect breaking changes and incomplete authentication. Prefer **gRPC + `pgctl`** for real configuration until the dashboard matures, and keep `rest.enabled = false` where the dashboard is not used.
 
 ## What’s next
 

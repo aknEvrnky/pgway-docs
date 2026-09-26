@@ -34,7 +34,7 @@ bun install
 bun run dev    # http://localhost:3000
 ```
 
-The all-in-one / CP process must be running with `rest_listen_addr` set (default `:8081`) for the UI to reach the API. See [Configuration](../getting-started/configuration.md).
+The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` set (default `:8081`) for the UI to reach the API. See [Configuration](../getting-started/configuration.md).
 
 ## What to use instead
 
