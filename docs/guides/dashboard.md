@@ -22,9 +22,11 @@ Work is tracked on the [Dashboard](https://github.com/aknEvrnky/pgway/milestones
 | Core gateway (CP/DP, CLI, HTTP proxy, balancers) | Usable / tested |
 | REST auth / secure defaults / rate limit | Done ([#86](https://github.com/aknEvrnky/pgway/issues/86)); coverage ongoing ([#87](https://github.com/aknEvrnky/pgway/issues/87)) |
 | REST login / logout / me + cookie session | Done (dashboard [#22](https://github.com/aknEvrnky/pgway/issues/22) backend) |
-| REST resource CRUD + agents + users API | Planned ([#102](https://github.com/aknEvrnky/pgway/issues/102), [#103](https://github.com/aknEvrnky/pgway/issues/103)) |
-| Dashboard login page / route guards | In progress ([#22](https://github.com/aknEvrnky/pgway/issues/22), [#104](https://github.com/aknEvrnky/pgway/issues/104)) |
-| Dashboard UI (CRUD, YAML, Vue Flow, agents home, users admin) | Planned ([#105](https://github.com/aknEvrnky/pgway/issues/105)–[#109](https://github.com/aknEvrnky/pgway/issues/109)) |
+| REST Proxy CRUD (+ conflict status mapping) | Done (dashboard Proxies UI) |
+| REST resource CRUD + agents + users API | Planned ([#102](https://github.com/aknEvrnky/pgway/issues/102), [#103](https://github.com/aknEvrnky/pgway/issues/103)) — Proxy routes already exist |
+| Dashboard login page / route guards | Done ([#22](https://github.com/aknEvrnky/pgway/issues/22)) |
+| Dashboard Proxies list / create / edit / delete | Done (slice of [#105](https://github.com/aknEvrnky/pgway/issues/105)) |
+| Dashboard UI (other resources, YAML, Vue Flow, agents home, users admin) | Planned ([#105](https://github.com/aknEvrnky/pgway/issues/105)–[#109](https://github.com/aknEvrnky/pgway/issues/109)) |
 | Overview charts / live logs / health panels | Later ([#20](https://github.com/aknEvrnky/pgway/issues/20), [#14](https://github.com/aknEvrnky/pgway/issues/14), [#9](https://github.com/aknEvrnky/pgway/issues/9)) |
 
 Milestone: [Dashboard](https://github.com/aknEvrnky/pgway/milestones) on GitHub.
@@ -44,6 +46,7 @@ The all-in-one / CP process must be running with `rest.enabled = true` (default)
 1. Add `http://localhost:3000` to `rest.cors_allow_origins` (credentials-enabled CORS).
 2. Point the UI at `http://localhost:8081` via `NUXT_PUBLIC_API_BASE` (default) — use **`localhost`**, not `127.0.0.1`, so the httpOnly session cookie stays same-site.
 3. Open `/login`, sign in with a CP user (after `pgctl init` / `pgctl login` credentials).
+4. Open **Proxies** (`/proxies`) to list, create (URL or manual fields), edit, and delete upstreams. Name is required. Edit omits password to keep existing credentials. Delete fails with a clear conflict when a pool still references the proxy.
 
 See [Authentication](authentication.md) for REST login/logout/me and [Configuration](../getting-started/configuration.md).
 
