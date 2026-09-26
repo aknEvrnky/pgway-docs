@@ -242,7 +242,8 @@ listen_addr = ":9090"
 
 [rest]
 enabled = true
-listen_addr = ":8081"
+listen_addr = "127.0.0.1:8081"
+cors_allow_origins = ["http://localhost:3000"]
 
 [auth]
 token_ttl = "720h"
@@ -268,7 +269,7 @@ path = "/var/pgway/lib"
 listen_addr = ":9090"
 
 [rest]
-listen_addr = ":8081"
+listen_addr = "127.0.0.1:8081"
 ```
 
 ### Data Plane agent (`pgway-dp`)
