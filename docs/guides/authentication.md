@@ -26,7 +26,7 @@ Hands-on bootstrap: [First run](../getting-started/first-run.md). Config TTLs: [
 | Surface | Auth today |
 |---------|------------|
 | **gRPC** (primary) | Bearer token on almost every RPC |
-| **REST** (dashboard) | Bearer user token required (`Authorization: Bearer …`); loopback default; CORS allowlist; rate limited |
+| **REST** (dashboard) | User session via login + Bearer and/or httpOnly cookie; loopback default; CORS allowlist (with credentials); rate limited |
 
 gRPC RPCs that do **not** require a prior user/agent session:
 
@@ -36,7 +36,17 @@ gRPC RPCs that do **not** require a prior user/agent session:
 | `AuthService/Login` | Exchange username/password for a session token |
 | `AgentService/Register` | First-time agent join via registration token |
 
-Everything else (apply, get, user admin, agent list/delete, Watch after register, …) needs a valid bearer.
+### REST auth endpoints
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| `POST` | `/api/v1/auth/login` | Public | Username/password → `{ token, user }`; also sets httpOnly `pgway_token` cookie |
+| `POST` | `/api/v1/auth/logout` | Required | Revokes the current token and clears the cookie |
+| `GET` | `/api/v1/auth/me` | Required | Current user `{ id, role }` |
+
+Authenticated REST calls accept `Authorization: Bearer <token>` **or** the `pgway_token` cookie. Prefer calling the API as `http://localhost:8081` (not `127.0.0.1`) from a dashboard on `http://localhost:3000` so the cookie stays same-site. Add the dashboard origin to `rest.cors_allow_origins`.
+
+Everything else on gRPC/REST (apply, get, user admin, agent list/delete, Watch after register, …) needs a valid user session (agents are rejected on REST).
 
 ## Token cheat-sheet
 

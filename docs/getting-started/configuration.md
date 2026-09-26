@@ -84,8 +84,10 @@ enabled = true
 # Prefer loopback until you put a reverse proxy / trusted network in front.
 listen_addr = "127.0.0.1:8081"
 # Browser Origins allowed for CORS. Empty = no cross-origin (no reflective Origin).
+# Dashboard (Nuxt) typically needs: ["http://localhost:3000"]
 cors_allow_origins = []
-# Per-client token-bucket for REST (0 = off). Same model as grpc.rate_limit_*.
+# Token-bucket for REST (0 = off). Applied per client IP before auth and
+# per user after auth, so token brute-force is capped too.
 rate_limit_rps = 100
 rate_limit_burst = 200
 
@@ -190,7 +192,7 @@ trace_sample_ratio = 0.1
 | `rest.enabled` | `PGWAY_REST_ENABLED` | `true` | `pgway`, `pgway-cp` | Start the REST API (dashboard; **experimental**) |
 | `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `127.0.0.1:8081` | `pgway`, `pgway-cp` | REST bind address (loopback by default) |
 | `rest.cors_allow_origins` | `PGWAY_REST_CORS_ALLOW_ORIGINS` | `[]` | `pgway`, `pgway-cp` | Allowed browser Origins; empty = no CORS |
-| `rest.rate_limit_rps` | `PGWAY_REST_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client REST token-bucket rate; `0` disables |
+| `rest.rate_limit_rps` | `PGWAY_REST_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | REST token-bucket rate, per client IP (pre-auth) and per user (post-auth); `0` disables |
 | `rest.rate_limit_burst` | `PGWAY_REST_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
 | `probes.enabled` | `PGWAY_PROBES_ENABLED` | `false` | all | Start dedicated `/healthz` + `/readyz` listener |
 | `probes.listen_addr` | `PGWAY_PROBES_LISTEN_ADDR` | `:8082` | all | Probe bind address; prefer `127.0.0.1:8082` or cluster-internal; do not expose publicly |
@@ -311,9 +313,9 @@ PGWAY_GRPC_DIAL_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
 
 ## REST and the dashboard
 
-`rest.enabled` starts the Control Plane REST surface used by the Nuxt dashboard (bound to `rest.listen_addr`, default **`127.0.0.1:8081`**). Management routes require `Authorization: Bearer <user token>` (same tokens as gRPC/`pgctl login`). CORS is an explicit allowlist (`rest.cors_allow_origins`; empty = no browser cross-origin). Rate limits mirror gRPC (`rest.rate_limit_rps` / `burst`).
+`rest.enabled` starts the Control Plane REST surface used by the Nuxt dashboard (bound to `rest.listen_addr`, default **`127.0.0.1:8081`**). Session endpoints: `POST /api/v1/auth/login` (public), `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`. Other management routes require a user session via `Authorization: Bearer …` or the httpOnly `pgway_token` cookie (same token store as gRPC/`pgctl login`). CORS is an explicit allowlist with credentials (`rest.cors_allow_origins`; empty = no browser cross-origin). Rate limits (`rest.rate_limit_rps` / `burst`) apply twice: per client IP **before** auth (capping token brute-force and anonymous traffic) and per user **after** auth.
 
-The surface remains **experimental** (incomplete resource coverage, evolving JSON). Prefer **gRPC + `pgctl`** for production configuration, and set `rest.enabled = false` where the dashboard is unused. For local Nuxt dev, add your UI origin to `cors_allow_origins` (e.g. `http://localhost:3000`).
+The surface remains **experimental** (incomplete resource coverage, evolving JSON). Prefer **gRPC + `pgctl`** for production configuration, and set `rest.enabled = false` where the dashboard is unused. For local Nuxt dev, add your UI origin to `cors_allow_origins` (e.g. `http://localhost:3000`) and call the API as `http://localhost:8081` so the session cookie stays same-site.
 
 ## What’s next
 

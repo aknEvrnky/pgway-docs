@@ -20,10 +20,11 @@ Work is tracked on the [Dashboard](https://github.com/aknEvrnky/pgway/milestones
 | Area | State |
 |------|--------|
 | Core gateway (CP/DP, CLI, HTTP proxy, balancers) | Usable / tested |
-| REST auth / secure defaults / rate limit | In progress ([#86](https://github.com/aknEvrnky/pgway/issues/86), [#87](https://github.com/aknEvrnky/pgway/issues/87)) |
+| REST auth / secure defaults / rate limit | Done ([#86](https://github.com/aknEvrnky/pgway/issues/86)); coverage ongoing ([#87](https://github.com/aknEvrnky/pgway/issues/87)) |
+| REST login / logout / me + cookie session | Done (dashboard [#22](https://github.com/aknEvrnky/pgway/issues/22) backend) |
 | REST resource CRUD + agents + users API | Planned ([#102](https://github.com/aknEvrnky/pgway/issues/102), [#103](https://github.com/aknEvrnky/pgway/issues/103)) |
-| Dashboard login / session | Planned ([#22](https://github.com/aknEvrnky/pgway/issues/22)) |
-| Dashboard UI (CRUD, YAML, Vue Flow, agents home, users admin) | Planned ([#104](https://github.com/aknEvrnky/pgway/issues/104)–[#109](https://github.com/aknEvrnky/pgway/issues/109)) |
+| Dashboard login page / route guards | In progress ([#22](https://github.com/aknEvrnky/pgway/issues/22), [#104](https://github.com/aknEvrnky/pgway/issues/104)) |
+| Dashboard UI (CRUD, YAML, Vue Flow, agents home, users admin) | Planned ([#105](https://github.com/aknEvrnky/pgway/issues/105)–[#109](https://github.com/aknEvrnky/pgway/issues/109)) |
 | Overview charts / live logs / health panels | Later ([#20](https://github.com/aknEvrnky/pgway/issues/20), [#14](https://github.com/aknEvrnky/pgway/issues/14), [#9](https://github.com/aknEvrnky/pgway/issues/9)) |
 
 Milestone: [Dashboard](https://github.com/aknEvrnky/pgway/milestones) on GitHub.
@@ -34,11 +35,17 @@ Only if you are hacking on the frontend. Requires Bun or Node 20+.
 
 ```bash
 cd frontend
-bun install
-bun run dev    # http://localhost:3000
+bun install   # or: npm install
+bun run dev   # http://localhost:3000
 ```
 
-The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` reachable (default `127.0.0.1:8081`). Add `http://localhost:3000` to `rest.cors_allow_origins` for browser calls. See [Configuration](../getting-started/configuration.md).
+The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` reachable (default `127.0.0.1:8081`).
+
+1. Add `http://localhost:3000` to `rest.cors_allow_origins` (credentials-enabled CORS).
+2. Point the UI at `http://localhost:8081` via `NUXT_PUBLIC_API_BASE` (default) — use **`localhost`**, not `127.0.0.1`, so the httpOnly session cookie stays same-site.
+3. Open `/login`, sign in with a CP user (after `pgctl init` / `pgctl login` credentials).
+
+See [Authentication](authentication.md) for REST login/logout/me and [Configuration](../getting-started/configuration.md).
 
 ## What to use instead
 
