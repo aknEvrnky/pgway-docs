@@ -98,9 +98,9 @@ Once the DP has bootstrapped and bound listeners, proxy traffic can continue on 
 | `dataplane.cp_disconnect_unreachable_threshold` | `30s` | Both heartbeat and Watch proofs must be stale, then remain so for this long, before `unreachable` (worst case about **2×** this value after CP death: wait for HB age-out, then this window) |
 | `dataplane.cp_disconnect_recover_threshold` | `0s` | Optional hysteresis before leaving `unreachable` |
 
-Cold start with CP down is still fatal (no disk last-known-good). Expired/revoked agent tokens still exit the process (re-register with a new registration token).
+Cold start with CP down no longer exits the process: the DP retries registration (or loading saved credentials) and the initial snapshot with capped backoff (1s → 30s) until the CP answers. With probes enabled, `/healthz` stays `200` and `/readyz` reports `bootstrap_pending` during the wait. Only unrecoverable setup errors still exit: no agent state and an empty `PGWAY_AGENT_REGISTRATION_TOKEN`, an unusable state file, or a rejected/expired registration token (re-register with a new registration token).
 
-When `probes.enabled` is true, `/readyz` follows **rejecting** link state: not ready only when the DP is `fail_closed` **and** `unreachable` (`cp_unreachable`). Under `fail_open`, readiness stays ready so orchestrators keep routing while the DP serves stale config. Under `fail_closed`, rejected proxy requests include `Retry-After` set to `cp_disconnect_unreachable_threshold` (seconds).
+DP readiness has two gates. Until the first successful bootstrap (credentials + initial snapshot), `/readyz` reports `bootstrap_pending`. Afterwards it follows **rejecting** link state: not ready only when the DP is `fail_closed` **and** `unreachable` (`cp_unreachable`). Under `fail_open`, readiness stays ready so orchestrators keep routing while the DP serves stale config. Under `fail_closed`, rejected proxy requests include `Retry-After` set to `cp_disconnect_unreachable_threshold` (seconds).
 
 ### Process probes (all binaries)
 
@@ -109,9 +109,9 @@ Opt-in dedicated listener (`probes.enabled`, default off). Prefer binding to loo
 | Path | Meaning |
 |------|---------|
 | `GET /healthz` | Liveness — always `200` `ok` while the probe server answers |
-| `GET /readyz` | Readiness — `200` `ok` or `503` with a short reason (`shutting_down`, `storage_unavailable`, `grpc_not_serving`, `cp_unreachable`) |
+| `GET /readyz` | Readiness — `200` `ok` or `503` with a short reason (`bootstrap_pending`, `shutting_down`, `storage_unavailable`, `grpc_not_serving`, `cp_unreachable`) |
 
-**Checks:** CP / all-in-one → shutdown, Badger ping, gRPC serving. DP → shutdown, and `CPLinkStatus.Rejecting` (fail_closed + unreachable). Empty entrypoint sets are still ready.
+**Checks:** CP / all-in-one → shutdown, Badger ping, gRPC serving. DP → shutdown, bootstrap latch (`bootstrap_pending` until the first successful bootstrap), and `CPLinkStatus.Rejecting` (fail_closed + unreachable). Empty entrypoint sets are still ready.
 
 ```yaml
 livenessProbe:
@@ -129,7 +129,7 @@ readinessProbe:
 | CP down &lt; ~threshold window | Keep proxying on last-known config | Same |
 | CP down long enough to be `unreachable` | Keep proxying (stale latch); logs `cp link state changed` | **New** requests → `503` + `Retry-After`; open CONNECT tunnels keep running |
 | CP returns, Watch reconnects | Full Resync (cache + listeners match CP again) | Same; `503` stops after recover |
-| Cold start while CP is down | Process exits (fatal) | Same |
+| Cold start while CP is down | Process stays up and retries (readiness `bootstrap_pending`); becomes ready when CP answers | Same |
 | All-in-one `pgway` | Disconnect policy N/A; periodic Resync every `event_resync_interval` heals dropped in-process events | Same |
 
 ## Agent lifecycle
@@ -160,6 +160,7 @@ readinessProbe:
 | Symptom | Checks |
 |---------|--------|
 | DP exits: no agent state / empty registration token | First start needs `PGWAY_AGENT_REGISTRATION_TOKEN` or a populated `agent.state_path` |
+| DP not ready, logs `agent bootstrap failed; retrying` | CP unreachable at startup — the DP is waiting (readiness `bootstrap_pending`); check CP uptime and network |
 | `agent list` shows disconnected | Network to CP, `agent.heartbeat_interval` vs threshold, CP uptime |
 | Apply OK but no listener | Confirm DP is running and Watch connected; look for entrypoint bind logs on **DP**, not CP |
 | `pgctl` auth errors | `pgctl login`; `PGWAY_GRPC_LISTEN_ADDR`; not mixing agent token with user commands |
