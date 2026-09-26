@@ -26,7 +26,7 @@ Hands-on bootstrap: [First run](../getting-started/first-run.md). Config TTLs: [
 | Surface | Auth today |
 |---------|------------|
 | **gRPC** (primary) | Bearer token on almost every RPC |
-| **REST** (dashboard) | **Not enforced yet** — experimental; do not expose publicly |
+| **REST** (dashboard) | Bearer user token required (`Authorization: Bearer …`); loopback default; CORS allowlist; rate limited |
 
 gRPC RPCs that do **not** require a prior user/agent session:
 
@@ -156,5 +156,5 @@ After delete (or expired token without heartbeats), the DP needs a **new** regis
 
 - Treat bootstrap, registration, and session tokens as secrets.
 - Prefer env vars for secrets (`PGWAY_TOKEN`, `PGWAY_AGENT_REGISTRATION_TOKEN`) over committing them in YAML.
-- Do not expose unauthenticated REST / dashboard ports on untrusted networks.
+- Do not expose REST / dashboard on untrusted networks without a reverse proxy; keep the default loopback bind or disable `rest.enabled`.
 - mTLS between CP and DP is planned ([#47](https://github.com/aknEvrnky/pgway/issues/47)), not implemented yet.

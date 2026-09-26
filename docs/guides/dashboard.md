@@ -9,18 +9,22 @@ It is a Nuxt 4 + Vue 3 + PrimeVue + Vue Flow UI that talks to the Control Plane 
 *Demo / concept mock of the dashboard overview (not a guarantee of shipped UI).*
 
 !!! warning
-    Prefer **`pgctl` + gRPC** for real configuration and operations until dashboard auth and APIs stabilize.
+    Prefer **`pgctl` + gRPC** for real configuration and operations until the dashboard matures.
 
-    REST authentication is **not** fully enforced yet — do not expose `rest_listen_addr` on untrusted networks.
+    REST requires a **user** bearer token. Default listen is **loopback** (`127.0.0.1:8081`). Do not bind non-loopback without a trusted network / reverse proxy; configure `rest.cors_allow_origins` for browser UIs.
 
 ## Status
+
+Work is tracked on the [Dashboard](https://github.com/aknEvrnky/pgway/milestones) milestone. Epic: [#21](https://github.com/aknEvrnky/pgway/issues/21).
 
 | Area | State |
 |------|--------|
 | Core gateway (CP/DP, CLI, HTTP proxy, balancers) | Usable / tested |
-| Dashboard UI | Work in progress ([#21](https://github.com/aknEvrnky/pgway/issues/21)) |
-| Dashboard REST endpoints | Work in progress ([#20](https://github.com/aknEvrnky/pgway/issues/20)) |
-| Dashboard authentication | Planned ([#22](https://github.com/aknEvrnky/pgway/issues/22)) |
+| REST auth / secure defaults / rate limit | In progress ([#86](https://github.com/aknEvrnky/pgway/issues/86), [#87](https://github.com/aknEvrnky/pgway/issues/87)) |
+| REST resource CRUD + agents + users API | Planned ([#102](https://github.com/aknEvrnky/pgway/issues/102), [#103](https://github.com/aknEvrnky/pgway/issues/103)) |
+| Dashboard login / session | Planned ([#22](https://github.com/aknEvrnky/pgway/issues/22)) |
+| Dashboard UI (CRUD, YAML, Vue Flow, agents home, users admin) | Planned ([#104](https://github.com/aknEvrnky/pgway/issues/104)–[#109](https://github.com/aknEvrnky/pgway/issues/109)) |
+| Overview charts / live logs / health panels | Later ([#20](https://github.com/aknEvrnky/pgway/issues/20), [#14](https://github.com/aknEvrnky/pgway/issues/14), [#9](https://github.com/aknEvrnky/pgway/issues/9)) |
 
 Milestone: [Dashboard](https://github.com/aknEvrnky/pgway/milestones) on GitHub.
 
@@ -34,7 +38,7 @@ bun install
 bun run dev    # http://localhost:3000
 ```
 
-The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` set (default `:8081`) for the UI to reach the API. See [Configuration](../getting-started/configuration.md).
+The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` reachable (default `127.0.0.1:8081`). Add `http://localhost:3000` to `rest.cors_allow_origins` for browser calls. See [Configuration](../getting-started/configuration.md).
 
 ## What to use instead
 
