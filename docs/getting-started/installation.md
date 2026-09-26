@@ -3,16 +3,17 @@
 pgway is **not released yet**. There are no versioned GitHub Releases or installers today.
 
 !!! info "Upcoming releases"
-    Multi-platform binaries will be published later with [GoReleaser](https://goreleaser.com/) (see issue [#19](https://github.com/aknEvrnky/pgway/issues/19): linux/darwin/windows, amd64/arm64, for `pgway`, `pgway-cp`, `pgway-dp`, and `pgctl`). Until then, run from source.
+    Multi-platform binaries and published container images will ship later with [GoReleaser](https://goreleaser.com/) (see issue [#19](https://github.com/aknEvrnky/pgway/issues/19): linux/darwin, amd64/arm64, for `pgway`, `pgway-cp`, `pgway-dp`, and `pgctl`). Until then, run from source or build the Docker image locally.
 
-For now: clone the repository and use **`go build`**, **`make build`**, or **`go run`**.
+For now: clone the repository and use **`go build`**, **`make build`**, **`go run`**, or **`docker build`**.
 
 ## Prerequisites
 
-- [Go](https://go.dev/dl/) **1.27** or newer (`go version`)
+- [Go](https://go.dev/dl/) **1.27** or newer (`go version`) — not required if you only build the Docker image
 - Git
 - [protoc](https://grpc.io/docs/protoc-installation/) for `make tools` / `make proto` (e.g. `brew install protobuf` or `apt install protobuf-compiler`)
 - Optional, only for dashboard development: [Bun](https://bun.sh/) or Node.js 20+ (not required for the gateway itself)
+- Optional, for the container image: [Docker](https://docs.docker.com/get-docker/) (or a compatible engine)
 
 ## Clone
 
@@ -35,6 +36,42 @@ This writes four binaries under `./build/`:
 | Control Plane | `./build/pgway-cp` |
 | Data Plane | `./build/pgway-dp` |
 | CLI | `./build/pgctl` |
+
+## Docker image (from source)
+
+The repo root [`Dockerfile`](https://github.com/aknEvrnky/pgway/blob/main/Dockerfile) builds one **linux** image that contains all four binaries. The default entrypoint is all-in-one `pgway`. The runtime base is distroless (`gcr.io/distroless/static:nonroot`).
+
+There is **no** official `docker compose` quick-start yet: first-run still needs the bootstrap token from CP stderr and a config file — use [First run](first-run.md) (native binaries) or mount the same files into the container. Distributed CP+DP containers would also need agent registration tokens; that remains a native/[distributed](../guides/distributed.md) flow for now.
+
+Published multi-arch images on a registry land with [#19](https://github.com/aknEvrnky/pgway/issues/19).
+
+### Build
+
+```bash
+docker build -t pgway:local .
+```
+
+### Run all-in-one
+
+Mount a TOML config and a writable Badger data directory. Publish gRPC (and any entrypoint ports you configure):
+
+```bash
+docker run --rm \
+  -v "$PWD/config.toml:/config/config.toml:ro" \
+  -v "$PWD/var/lib:/var/pgway/lib" \
+  -p 9090:9090 \
+  pgway:local --config /config/config.toml
+```
+
+Adjust `badger.path` in the config (or env) so it matches the mounted data dir. Bootstrap admin with `pgctl init` as in [First run](first-run.md) — the one-time token is printed to the container’s **stderr**.
+
+### Other binaries in the same image
+
+```bash
+docker run --rm --entrypoint /usr/local/bin/pgctl pgway:local --help
+docker run --rm --entrypoint /usr/local/bin/pgway-cp pgway:local --config /config/config.toml
+docker run --rm --entrypoint /usr/local/bin/pgway-dp pgway:local --config /config/config.toml
+```
 
 ## Dev tools and tests
 
@@ -86,4 +123,4 @@ go install github.com/aknEvrnky/pgway/cmd/pgctl@latest
 
 ## What’s next
 
-[Configuration](configuration.md) — config file location, keys, and examples for each binary. Then: bootstrap admin + minimal stack.
+[Configuration](configuration.md) — config file location, keys, and examples for each binary. Then: bootstrap admin + minimal stack ([First run](first-run.md)).

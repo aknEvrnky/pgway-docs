@@ -116,7 +116,7 @@ Operator tool — not a server. Talks to the CP over gRPC with a user token (`pg
 ## Related
 
 - [Resources & flow model](resources.md) — what gets configured
-- [Installation](../getting-started/installation.md) — build from source
+- [Installation](../getting-started/installation.md) — build from source or Docker image
 - [Configuration](../getting-started/configuration.md) — config file and keys
 - [First run](../getting-started/first-run.md) — bootstrap and first apply
 - [Contributing](../guides/contributing.md) — architecture rules for contributors

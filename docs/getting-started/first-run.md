@@ -9,7 +9,7 @@ Two ways to bring pgway up:
 
 Both modes need the **user** bootstrap token from CP **stderr** on first start (`pgctl init`). Only the split CP/DP layout adds the **agent** registration step.
 
-Assumes you already [built binaries](installation.md) and have a [config file](configuration.md).
+Assumes you already [built binaries or a Docker image](installation.md) and have a [config file](configuration.md).
 
 ---
 
