@@ -149,6 +149,7 @@ cp_disconnect_recover_threshold = "0s"
 
 [otel]
 # Opt-in OpenTelemetry metrics (OTLP/gRPC push to your collector). Off by default.
+# Master switch: traces also require enabled = true.
 enabled = false
 # OTLP/gRPC collector host:port (no scheme).
 endpoint = "localhost:4317"
@@ -158,6 +159,10 @@ insecure = false
 service_name = ""
 # Periodic metric export interval.
 export_interval = "15s"
+# Opt-in distributed tracing (OTLP/gRPC spans). Requires enabled = true.
+traces_enabled = false
+# ParentBased + TraceIDRatioBased sample fraction (0.0–1.0). Default 0.1 = 10%.
+trace_sample_ratio = 0.1
 ```
 
 ## Keys
@@ -199,11 +204,13 @@ export_interval = "15s"
 | `dataplane.cp_disconnect_strategy` | `PGWAY_DATAPLANE_CP_DISCONNECT_STRATEGY` | `fail_open` | `pgway-dp` | `fail_open` \| `fail_closed` when CP unreachable |
 | `dataplane.cp_disconnect_unreachable_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_UNREACHABLE_THRESHOLD` | `30s` | `pgway-dp` | Both proofs stale, then this long → unreachable (≈ up to 2× after CP death) |
 | `dataplane.cp_disconnect_recover_threshold` | `PGWAY_DATAPLANE_CP_DISCONNECT_RECOVER_THRESHOLD` | `0s` | `pgway-dp` | Hysteresis leaving unreachable; `0` = immediate |
-| `otel.enabled` | `PGWAY_OTEL_ENABLED` | `false` | all | Enable OTLP/gRPC metrics push |
+| `otel.enabled` | `PGWAY_OTEL_ENABLED` | `false` | all | Master switch: enable OTLP/gRPC metrics push (required for traces too) |
 | `otel.endpoint` | `PGWAY_OTEL_ENDPOINT` | `localhost:4317` | all | OTLP/gRPC collector `host:port` (no scheme); required when enabled |
 | `otel.insecure` | `PGWAY_OTEL_INSECURE` | `false` | all | Plaintext OTLP/gRPC (no TLS); default `false` = TLS to the collector |
 | `otel.service_name` | `PGWAY_OTEL_SERVICE_NAME` | *(binary name)* | all | Resource `service.name`; empty → `pgway` / `pgway-cp` / `pgway-dp` |
-| `otel.export_interval` | `PGWAY_OTEL_EXPORT_INTERVAL` | `15s` | all | Periodic export interval; must be `> 0` when enabled |
+| `otel.export_interval` | `PGWAY_OTEL_EXPORT_INTERVAL` | `15s` | all | Periodic metric export interval; must be `> 0` when enabled |
+| `otel.traces_enabled` | `PGWAY_OTEL_TRACES_ENABLED` | `false` | all | Opt-in OTLP/gRPC span export; requires `otel.enabled = true` |
+| `otel.trace_sample_ratio` | `PGWAY_OTEL_TRACE_SAMPLE_RATIO` | `0.1` | all | Sample fraction `0.0`–`1.0` (ParentBased + TraceIDRatioBased); validated when traces enabled |
 
 `pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
 
