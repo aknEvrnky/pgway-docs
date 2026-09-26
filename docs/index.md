@@ -35,8 +35,10 @@ Upstream proxy providers rotate endpoints and credentials often. pgway gives you
 | Token auth + user management on gRPC | Ready |
 | BadgerDB-backed config store | Ready |
 | Web dashboard (Nuxt) + REST surface | Experimental — not ready |
+| GitHub Releases + multi-arch GHCR (`ghcr.io/aknevrnky/pgway`) | Ready |
+| OpenTelemetry metrics + tracing (OTLP) | Ready |
 | Health checks / auto pool recovery | Planned |
-| Metrics / OpenTelemetry | Planned |
+| Homebrew install formula | Planned ([#100](https://github.com/aknEvrnky/pgway/issues/100)) |
 
 ### Binaries
 
@@ -87,13 +89,13 @@ Work is organized around GitHub milestones. High-level direction:
 
 1. **API foundation** — domain/API polish for dashboard consumers (largely done; leftover test updates remain).
 2. **CP ↔ DP communication** — agent auth, hot reload, and balancers are largely in place. Still open: **proxy health**, **label-based DP placement**, **mTLS** between CP and DP.
-3. **Observability** — OpenTelemetry, live log streaming, audit / recent activity.
-4. **Production readiness** — Docker images, goreleaser / multi-platform distribution, CI build matrix.
-5. **Dashboard** — dedicated Nuxt admin UI and REST endpoints; **explicitly experimental** until these issues land.
+3. **Observability** — OpenTelemetry metrics and tracing are in; still open: live log streaming, audit / recent activity.
+4. **Production readiness** — Docker, GoReleaser / GitHub Releases, GHCR, and CI matrix are done. Still open: E2E / load testing, Helm chart, and later packaging such as **Homebrew** ([#100](https://github.com/aknEvrnky/pgway/issues/100)).
+5. **Dashboard** — dedicated Nuxt admin UI and REST endpoints; **explicitly experimental** until these issues land. Prefer finishing this before Homebrew and other install channels.
 
-Other near-term product goals (from the main project README): Prometheus-style metrics, health checks with automatic pool recovery, and proper auth for REST / dashboard.
+Other near-term product goals (from the main project README): health checks with automatic pool recovery, and proper auth for REST / dashboard.
 
-Smaller open items (DNS cache, REST rate limits, etc.) live as optimization issues on GitHub and will be tackled as capacity allows.
+Smaller open items live as issues on GitHub and will be tackled as capacity allows.
 
 ## This documentation site
 

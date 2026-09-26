@@ -92,9 +92,9 @@ Cover new behavior with unit tests next to the code and/or `integration/` tests.
 ## Suggested workflow
 
 1. Open an issue (bug/feature templates in the code repo) when the change is non-trivial.
-2. Implement on a branch; keep PRs focused.
+2. Implement on a branch; keep PRs focused. Use **Conventional Commits** (`feat:`, `fix:`, `docs:`, …) so GoReleaser can group release notes — see the code repo [`CONTRIBUTING.md`](https://github.com/aknEvrnky/pgway/blob/main/CONTRIBUTING.md).
 3. Run `make test` / `go vet` (and `make proto` if needed).
-4. Update **pgway-docs** in a matching change when the user-facing surface moved.
+4. Update **pgway-docs** in a matching change when the user-facing surface moved (same commit style in this repo).
 5. Open a PR using the template; link issues and note docs PRs.
 
 ## License
