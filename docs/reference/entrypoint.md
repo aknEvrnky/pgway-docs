@@ -19,7 +19,9 @@ Listen address where clients connect. Points at a **Flow**.
 - Schema requires `protocol`, `host`, non-zero `port`, and `flow_id`.
 - Entrypoint `protocol` for clients today is **HTTP proxy** (CONNECT + plain HTTP). Upstream proxies may still be HTTP or SOCKS5; that is configured on the **Proxy** resource, not the entrypoint.
 - Multiple entrypoints can run in one Data Plane process on different ports.
+- The Control Plane does **not** enforce unique `host:port` — prefer unique listen addresses. A duplicate bind fails on the Data Plane when the second socket opens.
 - After apply, the Data Plane hot-reloads and binds the listener (all-in-one or `pgway-dp`).
+- Deleting an entrypoint stops that listen socket; the referenced Flow is left intact.
 
 ## Example
 
