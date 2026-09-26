@@ -1,19 +1,16 @@
 # Installation
 
-pgway is **not released yet**. There are no versioned GitHub Releases or installers today.
+pgway publishes **GitHub Release** archives and a **GHCR** image when a SemVer tag is pushed (for example `v0.1.0-beta.1`). Until you have a tag you care about, build from source or from the repo `Dockerfile`.
 
-!!! info "Upcoming releases"
-    Multi-platform binaries and published container images will ship later with [GoReleaser](https://goreleaser.com/) (see issue [#19](https://github.com/aknEvrnky/pgway/issues/19): linux/darwin, amd64/arm64, for `pgway`, `pgway-cp`, `pgway-dp`, and `pgctl`). Until then, run from source or build the Docker image locally.
-
-For now: clone the repository and use **`go build`**, **`make build`**, **`go run`**, or **`docker build`**.
+Releases are **manual**: merge to `main`, then tag when ready. Tag pushes run GoReleaser in CI (binaries + `ghcr.io/aknEvrnky/pgway:<version>`). Pre-release tags (`-beta`, `-rc`, …) create GitHub pre-releases automatically. There is no auto-release on every main merge.
 
 ## Prerequisites
 
-- [Go](https://go.dev/dl/) **1.27** or newer (`go version`) — not required if you only build the Docker image
+- [Go](https://go.dev/dl/) **1.27** or newer (`go version`) — not required if you only pull a release binary or image
 - Git
 - [protoc](https://grpc.io/docs/protoc-installation/) for `make tools` / `make proto` (e.g. `brew install protobuf` or `apt install protobuf-compiler`)
 - Optional, only for dashboard development: [Bun](https://bun.sh/) or Node.js 20+ (not required for the gateway itself)
-- Optional, for the container image: [Docker](https://docs.docker.com/get-docker/) (or a compatible engine)
+- Optional, for a local image build: [Docker](https://docs.docker.com/get-docker/) (or a compatible engine)
 
 ## Clone
 
@@ -22,13 +19,33 @@ git clone https://github.com/aknEvrnky/pgway.git
 cd pgway
 ```
 
-## Build all binaries
+## Install from a GitHub Release
+
+1. Open the latest (or chosen) release: [aknEvrnky/pgway/releases](https://github.com/aknEvrnky/pgway/releases)
+2. Download the archive for your OS/arch (`linux` / `darwin` × `amd64` / `arm64`)
+3. Extract and put `pgway`, `pgway-cp`, `pgway-dp`, and/or `pgctl` on your `PATH`
+
+```bash
+pgctl version
+pgway -version
+```
+
+## Install from GHCR
+
+Published images contain all four binaries; default entrypoint is all-in-one `pgway`:
+
+```bash
+docker pull ghcr.io/aknEvrnky/pgway:0.1.0-beta.1   # use the tag from the release
+docker run --rm --entrypoint /usr/local/bin/pgctl ghcr.io/aknEvrnky/pgway:0.1.0-beta.1 version
+```
+
+## Build all binaries (from source)
 
 ```bash
 make build
 ```
 
-This writes four binaries under `./build/`:
+This writes four binaries under `./build/` and embeds version metadata via ldflags (`VERSION`, git commit, build time):
 
 | Binary | Path |
 |--------|------|
@@ -37,18 +54,27 @@ This writes four binaries under `./build/`:
 | Data Plane | `./build/pgway-dp` |
 | CLI | `./build/pgctl` |
 
+```bash
+./build/pgctl version
+./build/pgway -version
+```
+
 ## Docker image (from source)
 
 The repo root [`Dockerfile`](https://github.com/aknEvrnky/pgway/blob/main/Dockerfile) builds one **linux** image that contains all four binaries. The default entrypoint is all-in-one `pgway`. The runtime base is distroless (`gcr.io/distroless/static:nonroot`).
 
 There is **no** official `docker compose` quick-start yet: first-run still needs the bootstrap token from CP stderr and a config file — use [First run](first-run.md) (native binaries) or mount the same files into the container. Distributed CP+DP containers would also need agent registration tokens; that remains a native/[distributed](../guides/distributed.md) flow for now.
 
-Published multi-arch images on a registry land with [#19](https://github.com/aknEvrnky/pgway/issues/19).
-
 ### Build
 
 ```bash
 docker build -t pgway:local .
+# optional version metadata:
+docker build -t pgway:local \
+  --build-arg VERSION=dev \
+  --build-arg COMMIT="$(git rev-parse --short HEAD)" \
+  --build-arg DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  .
 ```
 
 ### Run all-in-one
@@ -68,9 +94,9 @@ Adjust `badger.path` in the config (or env) so it matches the mounted data dir. 
 ### Other binaries in the same image
 
 ```bash
-docker run --rm --entrypoint /usr/local/bin/pgctl pgway:local --help
-docker run --rm --entrypoint /usr/local/bin/pgway-cp pgway:local --config /config/config.toml
-docker run --rm --entrypoint /usr/local/bin/pgway-dp pgway:local --config /config/config.toml
+docker run --rm --entrypoint /usr/local/bin/pgctl pgway:local version
+docker run --rm --entrypoint /usr/local/bin/pgway-cp pgway:local -version
+docker run --rm --entrypoint /usr/local/bin/pgway-dp pgway:local -version
 ```
 
 ## Dev tools and tests
@@ -104,7 +130,7 @@ Or run a binary you just built:
 
 ```bash
 ./build/pgway
-./build/pgctl --help
+./build/pgctl version
 ```
 
 ## `go install` (optional)
@@ -119,7 +145,7 @@ go install github.com/aknEvrnky/pgway/cmd/pgctl@latest
 ```
 
 !!! note
-    `@latest` tracks the default branch tip, not a semver release. Prefer cloning and `make build` when you want a known local checkout.
+    `@latest` tracks the default branch tip, not a semver release. Prefer a GitHub Release archive or cloning and `make build` when you want a known checkout. `go install` does not inject release ldflags, so `pgctl version` will show `dev` unless you pass your own `-ldflags`.
 
 ## What’s next
 
