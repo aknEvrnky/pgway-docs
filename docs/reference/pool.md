@@ -33,6 +33,7 @@ A group of proxies in front of a load balancer. Either a **static** membership l
 | Static | ≥ 1 member; unique `proxy_id`; no `selector` |
 | Dynamic | `selector.allow` non-empty; no `members` |
 | Dynamic match | Proxy `metadata.labels` must contain every `allow` key/value |
+| Empty resolve | Zero matching proxies is allowed at apply/bootstrap; traffic fails until matches appear |
 | Weighted LB | Requires a **static** pool (enforced when applying the balancer) |
 | Morph guard | Cannot turn a pool non-static while a weighted balancer still references it |
 

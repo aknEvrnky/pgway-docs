@@ -127,7 +127,7 @@ Use a **Router** to send different traffic classes to different balancers (e.g. 
 
 - Selection runs on the **Data Plane** hot path against an in-memory balancer instance.
 - Config Watch / rebuild replaces the instance (state such as RR cursor or least-bytes counters resets on rebuild).
-- Empty resolved proxy list → request fails (no proxy available).
+- Empty resolved proxy list (common for a new **dynamic** pool before any labeled proxies exist) does **not** block process bootstrap — the balancer stays registered and each request fails with “no proxy” until the pool resolves at least one member.
 
 ## Related
 
