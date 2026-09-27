@@ -44,6 +44,17 @@ gRPC RPCs that do **not** require a prior user/agent session:
 | `POST` | `/api/v1/auth/logout` | Required | Revokes the current token and clears the cookie |
 | `GET` | `/api/v1/auth/me` | Required | Current user `{ id, role }` |
 
+### REST users admin (admin role required)
+
+Same semantics as gRPC `UserService` / `pgctl user`. Members receive **403**.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/v1/users` | List (`page_size`, `page_token`, `search`, `role`) |
+| `POST` | `/api/v1/users` | Create `{ username, password?, role? }`; empty password → `generated_password` |
+| `DELETE` | `/api/v1/users/{username}` | Delete (last admin → **409**) |
+| `POST` | `/api/v1/users/{username}/password` | Self-change (`old_password` + `new_password`) or admin reset of another user (`new_password` required) |
+
 Authenticated REST calls accept `Authorization: Bearer <token>` **or** the `pgway_token` cookie. Prefer calling the API as `http://localhost:8081` (not `127.0.0.1`) from a dashboard on `http://localhost:3000` so the cookie stays same-site. Add the dashboard origin to `rest.cors_allow_origins`.
 
 Everything else on gRPC/REST (apply, get, user admin, agent list/delete, Watch after register, …) needs a valid user session (agents are rejected on REST).

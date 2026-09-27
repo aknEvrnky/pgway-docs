@@ -24,10 +24,10 @@ Work is tracked on the [Dashboard](https://github.com/aknEvrnky/pgway/milestones
 | Dashboard login page / route guards / API client | Done ([#22](https://github.com/aknEvrnky/pgway/issues/22), [#104](https://github.com/aknEvrnky/pgway/issues/104)) |
 | REST Proxy / Pool / LoadBalancer / Router / Flow / Entrypoint CRUD | Done (dashboard resource pages + Flow editor) |
 | REST agents list | Planned ([#115](https://github.com/aknEvrnky/pgway/issues/115)) |
-| REST users admin API | Planned ([#103](https://github.com/aknEvrnky/pgway/issues/103)) |
+| REST users admin API | Done ([#103](https://github.com/aknEvrnky/pgway/issues/103)) — admin-only `/api/v1/users*` |
 | Dashboard Proxies / Pools / LB / Routers / Flows / Entrypoints CRUD | Done (slice of [#105](https://github.com/aknEvrnky/pgway/issues/105)) |
 | Flow visual editor (Vue Flow) + read-only YAML projection | Done (experimental) |
-| Users admin UI (admin-only nav) | Planned ([#109](https://github.com/aknEvrnky/pgway/issues/109)) |
+| Users admin UI (admin-only nav) | Done ([#109](https://github.com/aknEvrnky/pgway/issues/109)) |
 | Agents page / Settings / notifications | Stub / hidden — CRUD later |
 | Overview charts / live logs / health panels | Later ([#20](https://github.com/aknEvrnky/pgway/issues/20), [#14](https://github.com/aknEvrnky/pgway/issues/14), [#9](https://github.com/aknEvrnky/pgway/issues/9)) |
 
@@ -55,6 +55,7 @@ The all-in-one / CP process must be running with `rest.enabled = true` (default)
    - **Routers** (`/routers`) — ordered match rules → balancer targets.
    - **Flows** (`/flows`) — list + **visual editor** (`/flows/{name}`) for the pipeline graph.
    - **Entrypoints** (`/entrypoints`) — listen host/port bound to a Flow. Detach in the editor deletes the entrypoint (stops the socket); the Flow remains.
+   - **Users** (`/users`) — **admin only** (nav + route gate). List / create (`admin` or `member`; empty create password → one-time `generated_password`), delete (last admin blocked), password reset (new password required, same as gRPC). Members never see the nav item; hitting `/users` redirects home.
 5. **Agents** (`/agents`) is a placeholder until agent management CRUD ships — use `pgctl` / gRPC for agents today. **Settings** and header notifications are hidden until there is something to configure.
 
 ### Session & API client
@@ -62,7 +63,7 @@ The all-in-one / CP process must be running with `rest.enabled = true` (default)
 - Login sets an **httpOnly** `pgway_token` cookie (primary) and keeps a same-tab **Bearer** fallback in memory for the token returned by `POST /api/v1/auth/login`. The token is **not** stored in `localStorage`.
 - `useApi` sends `credentials: 'include'` and attaches `Authorization: Bearer …` when the in-memory token is present. JSON `{ "error": "…" }` bodies are surfaced as UI messages.
 - A **401** on a protected call clears the local session and redirects to `/login` (login / session probe calls opt out of that redirect).
-- Role-aware **Users** admin nav lands with [#109](https://github.com/aknEvrnky/pgway/issues/109); `isAdmin` is already available on the auth composable.
+- **Admin-only** user management: `GET/POST /api/v1/users`, `DELETE /api/v1/users/{username}`, and `POST /api/v1/users/{username}/password` (self-change: `old_password` + `new_password`; admin reset of another user: `new_password` required). Members receive **403**.
 
 ### Flow visual editor
 
