@@ -26,7 +26,7 @@ Hands-on bootstrap: [First run](../getting-started/first-run.md). Config TTLs: [
 | Surface | Auth today |
 |---------|------------|
 | **gRPC** (primary) | Bearer token on almost every RPC |
-| **REST** (dashboard) | User session via login + Bearer and/or httpOnly cookie; loopback default; CORS allowlist (with credentials); rate limited |
+| **Dashboard** HTTP | User session via login + Bearer and/or httpOnly cookie; loopback default; CORS allowlist (with credentials); rate limited |
 
 gRPC RPCs that do **not** require a prior user/agent session:
 
@@ -55,7 +55,7 @@ Same semantics as gRPC `UserService` / `pgctl user`. Members receive **403**.
 | `DELETE` | `/api/v1/users/{username}` | Delete (last admin → **409**) |
 | `POST` | `/api/v1/users/{username}/password` | Self-change (`old_password` + `new_password`) or admin reset of another user (`new_password` required) |
 
-Authenticated REST calls accept `Authorization: Bearer <token>` **or** the `pgway_token` cookie. Prefer calling the API as `http://localhost:8081` (not `127.0.0.1`) from a dashboard on `http://localhost:3000` so the cookie stays same-site. Add the dashboard origin to `rest.cors_allow_origins`.
+Authenticated dashboard HTTP calls accept `Authorization: Bearer <token>` **or** the `pgway_token` cookie. Prefer calling the API as `http://localhost:8081` (not `127.0.0.1`) from a Nuxt origin on `http://localhost:3000` so the cookie stays same-site. Add the dashboard origin to `dashboard.cors_allow_origins`.
 
 Everything else on gRPC/REST (apply, get, user admin, agent list/delete, Watch after register, …) needs a valid user session (agents are rejected on REST).
 
@@ -177,5 +177,5 @@ After delete (or expired token without heartbeats), the DP needs a **new** regis
 
 - Treat bootstrap, registration, and session tokens as secrets.
 - Prefer env vars for secrets (`PGWAY_TOKEN`, `PGWAY_AGENT_REGISTRATION_TOKEN`) over committing them in YAML.
-- Do not expose REST / dashboard on untrusted networks without a reverse proxy; keep the default loopback bind or disable `rest.enabled`.
+- Do not expose the dashboard HTTP surface on untrusted networks without a reverse proxy; keep the default loopback bind or disable `dashboard.enabled`.
 - mTLS between CP and DP is planned ([#47](https://github.com/aknEvrnky/pgway/issues/47)), not implemented yet.

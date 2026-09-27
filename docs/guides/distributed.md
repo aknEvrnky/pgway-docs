@@ -60,7 +60,7 @@ path = "./var/cp-lib"
 [grpc]
 listen_addr = ":9090"
 
-[rest]
+[dashboard]
 listen_addr = ":8081"
 ```
 

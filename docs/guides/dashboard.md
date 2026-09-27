@@ -2,7 +2,7 @@
 
 The web dashboard is **experimental** and **not production-ready**.
 
-It is a Nuxt 4 + Vue 3 + PrimeVue + Vue Flow UI that talks to the Control Plane over **REST**. Expect incomplete flows, breaking API changes, and rough edges.
+It is a Nuxt 4 + Vue 3 + PrimeVue + Vue Flow UI served from the Control Plane over HTTP (JSON under `/api/v1/*`, UI at `/` when embedded). Expect incomplete flows, breaking API changes, and rough edges.
 
 ![Dashboard demo — Kinetic Console overview](../assets/dashboard-demo.jpg)
 
@@ -11,7 +11,16 @@ It is a Nuxt 4 + Vue 3 + PrimeVue + Vue Flow UI that talks to the Control Plane 
 !!! warning
     Prefer **`pgctl` + gRPC** for real configuration and operations until the dashboard matures.
 
-    REST requires a **user** bearer token. Default listen is **loopback** (`127.0.0.1:8081`). Do not bind non-loopback without a trusted network / reverse proxy; configure `rest.cors_allow_origins` for browser UIs.
+    The dashboard HTTP surface requires a **user** session. Default listen is **loopback** (`127.0.0.1:8081`). Do not bind non-loopback without a trusted network / reverse proxy.
+
+## Using the embedded UI (release / Docker)
+
+Release and Docker images build `pgway` / `pgway-cp` with `-tags embeddashboard` so the static UI is inside the binary.
+
+1. Run with `dashboard.enabled = true` (default) and open **`http://127.0.0.1:8081/`** (same origin as `/api/v1` — no CORS needed).
+2. Sign in at `/login` with a CP user (after `pgctl init`).
+3. Untagged local `go build` / `make build` binaries have **no** UI; use a release build, `make build-embed`, or the [local UI development](#local-ui-development-optional) workflow below.
+
 
 ## Status
 
@@ -35,18 +44,18 @@ Milestone: [Dashboard](https://github.com/aknEvrnky/pgway/milestones) on GitHub.
 
 ## Local UI development (optional)
 
-Only if you are hacking on the frontend. Requires Bun or Node 20+.
+Only if you are hacking on the frontend (split process). Requires Bun or Node 20+ / Yarn.
 
 ```bash
 cd frontend
-bun install   # or: npm install
-bun run dev   # http://localhost:3000
+yarn install   # or: bun install / npm install
+yarn dev       # http://localhost:3000
 ```
 
-The all-in-one / CP process must be running with `rest.enabled = true` (default) and `rest.listen_addr` reachable (default `127.0.0.1:8081`).
+The all-in-one / CP process must be running with `dashboard.enabled = true` (default) and `dashboard.listen_addr` reachable (default `127.0.0.1:8081`).
 
-1. Add `http://localhost:3000` to `rest.cors_allow_origins` (credentials-enabled CORS).
-2. Point the UI at `http://localhost:8081` via `NUXT_PUBLIC_API_BASE` (default) — use **`localhost`**, not `127.0.0.1`, so the httpOnly session cookie stays same-site.
+1. Add `http://localhost:3000` to `dashboard.cors_allow_origins` (credentials-enabled CORS).
+2. Point the UI at `http://localhost:8081` via `NUXT_PUBLIC_API_BASE` (default) — use **`localhost`**, not `127.0.0.1`, so the httpOnly session cookie stays same-site. Embedded builds set `NUXT_PUBLIC_API_BASE=` (empty) for same-origin relative API calls.
 3. Open `/login`, sign in with a CP user (after `pgctl init` / `pgctl login` credentials).
 4. Resource pages (same REST filters: `search`, type/protocol chips, cursor pagination via `page_size` / `page_token`):
    - **Proxies** (`/proxies`) — create (URL or manual), edit, delete (blocked while a pool references the proxy).

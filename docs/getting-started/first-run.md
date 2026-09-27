@@ -45,7 +45,7 @@ What matters:
 | stderr `pgctl init --bootstrap-token …` | One-time secret for `pgctl init` (use **your** value) |
 | `grpc started` / `addr` | CP gRPC listen (default `:9090`) — `pgctl` dials this |
 | `gateway started` | Local Data Plane ready (no separate agent) |
-| `restapi started` | REST / dashboard port (default `:8081`) — **experimental** |
+| `dashboard started` | Dashboard HTTP port (default `:8081`) — **experimental** |
 
 !!! warning
     If you restart the server **before** `pgctl init`, a **new** bootstrap token is generated. The previous one is invalid.
@@ -206,7 +206,7 @@ curl -x http://<dp-host>:8080 https://example.com
 
 ## Dashboard?
 
-`restapi started` on `:8081` does **not** mean the UI is ready for production. Prefer `pgctl`. See the [Welcome](../index.md) experimental notice.
+Release builds embed the UI at `/` on the same port; the surface is still **experimental**. Prefer `pgctl` for production config. See the [Welcome](../index.md) experimental notice.
 
 ## What’s next
 

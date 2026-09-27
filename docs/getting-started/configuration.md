@@ -77,16 +77,16 @@ rate_limit_rps = 100
 # Token-bucket burst capacity. Required when rate_limit_rps > 0.
 rate_limit_burst = 200
 
-[rest]
-# Start the REST API (dashboard backend; experimental). On by default for
-# backward compatibility — set to false when the dashboard is not used.
+[dashboard]
+# Start the dashboard HTTP surface (JSON API + embedded UI when built with
+# -tags embeddashboard). On by default — set to false when unused.
 enabled = true
 # Prefer loopback until you put a reverse proxy / trusted network in front.
 listen_addr = "127.0.0.1:8081"
 # Browser Origins allowed for CORS. Empty = no cross-origin (no reflective Origin).
-# Dashboard (Nuxt) typically needs: ["http://localhost:3000"]
+# Local Nuxt dev typically needs: ["http://localhost:3000"]
 cors_allow_origins = []
-# Token-bucket for REST (0 = off). Applied per client IP before auth and
+# Token-bucket for dashboard HTTP (0 = off). Applied per client IP before auth and
 # per user after auth, so token brute-force is capped too.
 rate_limit_rps = 100
 rate_limit_burst = 200
@@ -189,11 +189,11 @@ trace_sample_ratio = 0.1
 | `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
 | `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
 | `grpc.rate_limit_burst` | `PGWAY_GRPC_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
-| `rest.enabled` | `PGWAY_REST_ENABLED` | `true` | `pgway`, `pgway-cp` | Start the REST API (dashboard; **experimental**) |
-| `rest.listen_addr` | `PGWAY_REST_LISTEN_ADDR` | `127.0.0.1:8081` | `pgway`, `pgway-cp` | REST bind address (loopback by default) |
-| `rest.cors_allow_origins` | `PGWAY_REST_CORS_ALLOW_ORIGINS` | `[]` | `pgway`, `pgway-cp` | Allowed browser Origins; empty = no CORS |
-| `rest.rate_limit_rps` | `PGWAY_REST_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | REST token-bucket rate, per client IP (pre-auth) and per user (post-auth); `0` disables |
-| `rest.rate_limit_burst` | `PGWAY_REST_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
+| `dashboard.enabled` | `PGWAY_DASHBOARD_ENABLED` | `true` | `pgway`, `pgway-cp` | Start the dashboard HTTP surface (API + UI; **experimental**) |
+| `dashboard.listen_addr` | `PGWAY_DASHBOARD_LISTEN_ADDR` | `127.0.0.1:8081` | `pgway`, `pgway-cp` | Dashboard bind address (loopback by default) |
+| `dashboard.cors_allow_origins` | `PGWAY_DASHBOARD_CORS_ALLOW_ORIGINS` | `[]` | `pgway`, `pgway-cp` | Allowed browser Origins; empty = no CORS |
+| `dashboard.rate_limit_rps` | `PGWAY_DASHBOARD_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Dashboard HTTP token-bucket rate, per client IP (pre-auth) and per user (post-auth); `0` disables |
+| `dashboard.rate_limit_burst` | `PGWAY_DASHBOARD_RATE_LIMIT_BURST` | `200` | `pgway`, `pgway-cp` | Token-bucket burst; must be `>= 1` when rps is enabled |
 | `probes.enabled` | `PGWAY_PROBES_ENABLED` | `false` | all | Start dedicated `/healthz` + `/readyz` listener |
 | `probes.listen_addr` | `PGWAY_PROBES_LISTEN_ADDR` | `:8082` | all | Probe bind address; prefer `127.0.0.1:8082` or cluster-internal; do not expose publicly |
 | `auth.token_ttl` | `PGWAY_AUTH_TOKEN_TTL` | `720h` | `pgway`, `pgway-cp` | Default login token lifetime |
@@ -242,7 +242,7 @@ path = "./var/lib"
 [grpc]
 listen_addr = ":9090"
 
-[rest]
+[dashboard]
 enabled = true
 listen_addr = "127.0.0.1:8081"
 cors_allow_origins = ["http://localhost:3000"]
@@ -270,7 +270,7 @@ path = "/var/pgway/lib"
 [grpc]
 listen_addr = ":9090"
 
-[rest]
+[dashboard]
 listen_addr = "127.0.0.1:8081"
 ```
 
@@ -311,11 +311,11 @@ dial_addr = "localhost:9090"
 PGWAY_GRPC_DIAL_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
 ```
 
-## REST and the dashboard
+## Dashboard HTTP surface
 
-`rest.enabled` starts the Control Plane REST surface used by the Nuxt dashboard (bound to `rest.listen_addr`, default **`127.0.0.1:8081`**). Session endpoints: `POST /api/v1/auth/login` (public), `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`. Other management routes require a user session via `Authorization: Bearer …` or the httpOnly `pgway_token` cookie (same token store as gRPC/`pgctl login`). CORS is an explicit allowlist with credentials (`rest.cors_allow_origins`; empty = no browser cross-origin). Rate limits (`rest.rate_limit_rps` / `burst`) apply twice: per client IP **before** auth (capping token brute-force and anonymous traffic) and per user **after** auth.
+`dashboard.enabled` starts the Control Plane dashboard HTTP surface (bound to `dashboard.listen_addr`, default **`127.0.0.1:8081`**): JSON under `/api/v1/*` and, when the binary was built with `-tags embeddashboard` (release / Docker / `make build-embed`), the static UI at `/`. Session endpoints: `POST /api/v1/auth/login` (public), `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`. Other management routes require a user session via `Authorization: Bearer …` or the httpOnly `pgway_token` cookie (same token store as gRPC/`pgctl login`). CORS is an explicit allowlist with credentials (`dashboard.cors_allow_origins`; empty = no browser cross-origin). Rate limits (`dashboard.rate_limit_rps` / `burst`) apply twice: per client IP **before** auth (capping token brute-force and anonymous traffic) and per user **after** auth.
 
-The surface remains **experimental** (incomplete resource coverage, evolving JSON). Prefer **gRPC + `pgctl`** for production configuration, and set `rest.enabled = false` where the dashboard is unused. For local Nuxt dev, add your UI origin to `cors_allow_origins` (e.g. `http://localhost:3000`) and call the API as `http://localhost:8081` so the session cookie stays same-site.
+The surface remains **experimental**. Prefer **gRPC + `pgctl`** for production configuration, and set `dashboard.enabled = false` where unused. **Release binaries:** open `http://127.0.0.1:8081/` (same origin — no CORS). **Local Nuxt dev:** add your UI origin to `cors_allow_origins` (e.g. `http://localhost:3000`) and call the API as `http://localhost:8081` so the session cookie stays same-site.
 
 ## What’s next
 

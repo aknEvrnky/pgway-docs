@@ -17,7 +17,7 @@ flowchart LR
 The CP is the source of truth for resources (Proxy, Pool, LoadBalancer, Router, Flow, Entrypoint, users, agents).
 
 - Persist config in **BadgerDB**
-- Expose **gRPC** (primary API for `pgctl` and agents) and **REST** (dashboard; experimental)
+- Expose **gRPC** (primary API for `pgctl` and agents) and the **dashboard** HTTP surface (API + UI; experimental)
 - Authenticate users (bootstrap / login tokens) and **agents** (registration + per-agent tokens)
 - Emit config change events so DPs can **hot-reload** without a full restart
 - Track agent registry (heartbeat → active / passive / disconnected)
@@ -72,7 +72,7 @@ flowchart TB
 
 ### `pgway`
 
-Default path for trying the project: one binary, one config file, local entrypoints. Still speaks gRPC for `pgctl` and can expose REST for the experimental dashboard.
+Default path for trying the project: one binary, one config file, local entrypoints. Still speaks gRPC for `pgctl` and can expose the experimental dashboard.
 
 ### `pgway-cp`
 
