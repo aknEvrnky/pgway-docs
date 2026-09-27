@@ -2,23 +2,23 @@
 
 `pgctl` is the operator client for the Control Plane over **gRPC**. It does not proxy client HTTP traffic.
 
-Auth and tokens: [Authentication](authentication.md). Config dial address: [Configuration](../getting-started/configuration.md).
+Auth and tokens: [Authentication](authentication.md). Server binaries and their config file: [Configuration](../getting-started/configuration.md).
 
 ## Global flags
 
 | Flag | Description |
 |------|-------------|
-| `--config <path>` | Config file (same search rules as other binaries if omitted) |
-| `--token <bearer>` | Override stored credentials for this invocation |
+| `--host`, `-H` | Control plane host (default `127.0.0.1`) |
+| `--port`, `-P` | Control plane port (default `9090`) |
+| `--token-path <path>` | Bearer token file (default `~/.pgctl/credentials`) |
 
-Token resolution: `--token` → `PGWAY_TOKEN` / config `token` → `~/.pgctl/credentials`.
-
-Typical dial:
+`pgctl` does **not** read a config file or environment — the address and token file are set per invocation via flags, MySQL-style:
 
 ```bash
-PGWAY_GRPC_LISTEN_ADDR=localhost:9090 ./build/pgctl …
-# or put grpc.listen_addr in the config file
+pgctl -H cp.internal -P 9090 get proxy
 ```
+
+The token always comes from the file at `--token-path` (written by `init` / `login`). There is no inline `--token` flag.
 
 ## Auth
 
@@ -26,7 +26,7 @@ PGWAY_GRPC_LISTEN_ADDR=localhost:9090 ./build/pgctl …
 |---------|-------------|
 | `pgctl init --bootstrap-token <tok>` | Create first admin (`PGWAY_BOOTSTRAP_TOKEN` also accepted). Optional `--username` / `--password` (prompted if omitted) |
 | `pgctl login --username <u>` | Issue session token. `--ttl`, `--no-expiry`, `--password` |
-| `pgctl logout` | Revoke current token and clear `~/.pgctl/credentials` |
+| `pgctl logout` | Revoke current token and remove the token file |
 
 ## Resources
 

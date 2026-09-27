@@ -98,11 +98,7 @@ Creates the first **admin**, issues a session token, writes `~/.pgctl/credential
 
 ### How `pgctl` picks a token
 
-Highest wins:
-
-1. `--token` flag  
-2. `PGWAY_TOKEN` env / `token` in config file  
-3. `~/.pgctl/credentials` (from `init` / `login`)
+`pgctl` reads exactly one source: the file at `--token-path` (default `~/.pgctl/credentials`, written by `init` / `login`). There is no `--token` flag, env var, or config file lookup — for automation, point `--token-path` at a file you provision.
 
 CLI state (`~/.pgctl/`) is separate from shared config search paths (`~/.pgway/`, `/etc/pgway/`, `.`).
 
@@ -176,6 +172,6 @@ After delete (or expired token without heartbeats), the DP needs a **new** regis
 ## Security notes
 
 - Treat bootstrap, registration, and session tokens as secrets.
-- Prefer env vars for secrets (`PGWAY_TOKEN`, `PGWAY_AGENT_REGISTRATION_TOKEN`) over committing them in YAML.
+- Prefer env vars for server-side secrets (`PGWAY_AGENT_REGISTRATION_TOKEN`) over committing them in TOML; `pgctl` carries its token only in the `--token-path` file.
 - Do not expose the dashboard HTTP surface on untrusted networks without a reverse proxy; keep the default loopback bind or disable `dashboard.enabled`.
 - mTLS between CP and DP is planned ([#47](https://github.com/aknEvrnky/pgway/issues/47)), not implemented yet.

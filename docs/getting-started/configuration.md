@@ -1,6 +1,8 @@
 # Configuration
 
-Every binary loads settings the same way: a **TOML** config **file** is required, then optional **environment variables** and **flags** override it.
+Server binaries (`pgway`, `pgway-cp`, `pgway-dp`) load settings the same way: a **TOML** config **file** is required, then optional **environment variables** and **flags** override it.
+
+`pgctl` does **not** read a config file at all — see [CLI](../guides/cli.md) (`--host` / `--port` / `--token-path` flags).
 
 Process/runtime config is TOML. Control-plane **resource** specs (`pgctl apply`, `stack.yaml`) remain YAML.
 
@@ -8,12 +10,12 @@ Process/runtime config is TOML. Control-plane **resource** specs (`pgctl apply`,
 
 Highest wins:
 
-1. **Flags** — `--config <path>` (all binaries); `--token` (`pgctl`)
-2. **Environment** — `PGWAY_` + key in uppercase; nested keys use `_` for `.` (e.g. `PGWAY_TOKEN`, `PGWAY_LOG_LEVEL`, `PGWAY_GRPC_LISTEN_ADDR`, `PGWAY_AGENT_REGISTRATION_TOKEN`)
+1. **Flags** — `--config <path>`
+2. **Environment** — `PGWAY_` + key in uppercase; nested keys use `_` for `.` (e.g. `PGWAY_LOG_LEVEL`, `PGWAY_GRPC_LISTEN_ADDR`, `PGWAY_AGENT_REGISTRATION_TOKEN`)
 3. **Config file**
 4. **Built-in defaults** (see table below)
 
-A config file must exist on a search path (or via `--config`) even if you override every value with env vars.
+A config file must exist on a search path (or via `--config`) even if you override every value with env vars — for the server binaries; `pgctl` runs without one.
 
 ## Where the file is loaded from
 
@@ -45,19 +47,15 @@ Canonical source in the main repository:
 Full contents (keep this in sync with `main` when the file changes):
 
 ```toml
-# pgway default configuration.
-# Every key can also be set via a PGWAY_-prefixed env var (e.g. PGWAY_TOKEN,
+# pgway default configuration (pgway, pgway-cp, pgway-dp — pgctl does not
+# read a config file; it takes --host/--port/--token-path flags).
+# Every key can also be set via a PGWAY_-prefixed env var (e.g.
 # PGWAY_BADGER_PATH, PGWAY_AGENT_REGISTRATION_TOKEN) or, for the file location,
 # the --config flag. Nested keys use underscores in env names (badger.path →
 # PGWAY_BADGER_PATH). Precedence:
 #   flags > env vars > this file > built-in defaults.
 
 log_level = "info"
-
-# Outgoing control-plane auth token — pgctl in distributed mode.
-# Prefer the PGWAY_TOKEN env var for secrets; leave empty for all-in-one.
-# pgway-dp uses an agent token from agent.state_path after registration.
-token = ""
 
 [badger]
 # BadgerDB data directory (pgway, pgway-cp).
@@ -66,7 +64,8 @@ path = "/var/pgway/lib"
 gc_interval = "5m"
 
 [grpc]
-# gRPC listen address for the control plane. pgway-dp / pgctl dial this address.
+# gRPC listen address for the control plane. pgway-dp dials grpc.dial_addr,
+# which falls back to this address when unset.
 listen_addr = ":9090"
 # gRPC keepalive ping interval (server + client). 0 disables.
 keepalive_interval = "1m"
@@ -180,11 +179,10 @@ trace_sample_ratio = 0.1
 | Key | Env | Default | Used by | Description |
 |-----|-----|---------|---------|-------------|
 | `log_level` | `PGWAY_LOG_LEVEL` | `info` | all | `debug` \| `info` \| `warn` \| `error` |
-| `token` | `PGWAY_TOKEN` | *(empty)* | `pgctl` | Bearer for CP calls; prefer env or `~/.pgctl/credentials` |
 | `badger.path` | `PGWAY_BADGER_PATH` | `/var/pgway/lib` | `pgway`, `pgway-cp` | BadgerDB directory |
 | `badger.gc_interval` | `PGWAY_BADGER_GC_INTERVAL` | `5m` | `pgway`, `pgway-cp` | Badger value log GC period; `0` disables |
 | `grpc.listen_addr` | `PGWAY_GRPC_LISTEN_ADDR` | `:9090` | all | CP **listen** address (`pgway` / `pgway-cp`) |
-| `grpc.dial_addr` | `PGWAY_GRPC_DIAL_ADDR` | *(empty → listen_addr)* | `pgway-dp`, `pgctl` | CP address to **dial**; leave empty to reuse `listen_addr` locally |
+| `grpc.dial_addr` | `PGWAY_GRPC_DIAL_ADDR` | *(empty → listen_addr)* | `pgway-dp` | CP address to **dial**; leave empty to reuse `listen_addr` locally |
 | `grpc.keepalive_interval` | `PGWAY_GRPC_KEEPALIVE_INTERVAL` | `1m` | all | gRPC keepalive ping period; `0` disables |
 | `grpc.keepalive_timeout` | `PGWAY_GRPC_KEEPALIVE_TIMEOUT` | `20s` | all | Keepalive ping ACK wait; must be `> 0` when interval is enabled |
 | `grpc.rate_limit_rps` | `PGWAY_GRPC_RATE_LIMIT_RPS` | `100` | `pgway`, `pgway-cp` | Per-client unary RPC token-bucket rate; `0` disables |
@@ -226,7 +224,7 @@ trace_sample_ratio = 0.1
 | `otel.traces_enabled` | `PGWAY_OTEL_TRACES_ENABLED` | `false` | all | Opt-in OTLP/gRPC span export; requires `otel.enabled = true` |
 | `otel.trace_sample_ratio` | `PGWAY_OTEL_TRACE_SAMPLE_RATIO` | `0.1` | all | Sample fraction `0.0`–`1.0` (ParentBased + TraceIDRatioBased); validated when traces enabled |
 
-`pgctl` credentials after `init` / `login` live under **`~/.pgctl/credentials`**, separate from the shared `~/.pgway/` config search path.
+`pgctl` does not use any of these keys. Its token (after `init` / `login`) lives under **`~/.pgctl/credentials`** by default — see the `--token-path` flag in [CLI](../guides/cli.md).
 
 ## Examples
 
@@ -296,19 +294,14 @@ First start needs a one-time registration token (created on the CP with `pgctl a
 
 ### CLI (`pgctl`)
 
-Often only needs how to reach the CP and a token:
-
-```toml
-# optional pgctl-oriented snippet
-token = ""   # or set PGWAY_TOKEN / use ~/.pgctl/credentials
-
-[grpc]
-dial_addr = "localhost:9090"
-```
+`pgctl` is config-file free — no TOML, no `PGWAY_*` env vars. Address and token file come from flags:
 
 ```bash
-./build/pgctl --config ./config.toml get proxy
-PGWAY_GRPC_DIAL_ADDR=localhost:9090 PGWAY_TOKEN=… ./build/pgctl get proxy
+./build/pgctl -H 127.0.0.1 -P 9090 get proxy
+# defaults are loopback:9090, so locally just:
+./build/pgctl get proxy
+# custom token file:
+./build/pgctl --token-path /etc/pgctl/token get proxy
 ```
 
 ## Dashboard HTTP surface

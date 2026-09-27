@@ -64,10 +64,10 @@ This creates the first admin and stores a session under `~/.pgctl/credentials`. 
 ./build/pgctl login --username admin
 ```
 
-Point `pgctl` at the CP if needed:
+Point `pgctl` at the CP if needed (defaults are `127.0.0.1:9090`, so this is rare on one machine):
 
 ```bash
-PGWAY_GRPC_LISTEN_ADDR=localhost:9090 ./build/pgctl init --bootstrap-token 'pgw_…'
+./build/pgctl -H cp-host -P 9090 init --bootstrap-token 'pgw_…'
 ```
 
 !!! note "No agent token here"

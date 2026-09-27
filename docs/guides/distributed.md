@@ -150,8 +150,8 @@ readinessProbe:
 ## Operations tips
 
 - Give each agent a stable unique `agent.name` and its own `agent.state_path`.
-- Point every `pgctl` and DP at the same CP `grpc.listen_addr` (host reachable from that machine).
-- Prefer `PGWAY_AGENT_REGISTRATION_TOKEN` / `PGWAY_TOKEN` over committing secrets in TOML.
+- Point the DP (`grpc.dial_addr`) and `pgctl` (`-H` / `-P` flags) at the same CP (host reachable from that machine).
+- Prefer `PGWAY_AGENT_REGISTRATION_TOKEN` over committing secrets in TOML; `pgctl` carries its token only in the `--token-path` file.
 - Entrypoint `host:port` is local to the **DP** process — open firewalls accordingly.
 - Label-based DP placement ([#46](https://github.com/aknEvrnky/pgway/issues/46)) and mTLS CP↔DP ([#47](https://github.com/aknEvrnky/pgway/issues/47)) are still open.
 
