@@ -33,7 +33,7 @@ Binaries: `pgway` (both), `pgway-cp`, `pgway-dp`, `pgctl`. See [Binaries & plane
 | Area | Packages |
 |------|----------|
 | Shared domain | `internal/application/core/domain` |
-| Control plane | `internal/application/controlplane`, `auth`, `agent` |
+| Control plane | `internal/application/controlplane/{api,auth,agent}` |
 | Data plane | `internal/application/dataplane/{api,agenthost,balancer,consumer}` |
 | Ports | `internal/ports` |
 | Adapters | `internal/adapters/{grpc,http,rest,cli,repository/badger,...}` |
@@ -42,7 +42,7 @@ Binaries: `pgway` (both), `pgway-cp`, `pgway-dp`, `pgctl`. See [Binaries & plane
 **Import rules (enforced by tests):**
 
 - `core/domain` — no imports from other `internal/` packages
-- `dataplane/*` must **not** import `controlplane`, `auth`, or `agent`
+- `dataplane/*` must **not** import anything under `controlplane`
 - `ports` may import `core/domain` from application (schema types on Apply writers are an intentional CP-edge exception)
 - Only `cmd/pgway` wires CP + DP in one process
 
@@ -51,7 +51,7 @@ Binaries: `pgway` (both), `pgway-cp`, `pgway-dp`, `pgctl`. See [Binaries & plane
 ### Plane boundaries
 
 - New hot-path / listen / balancer logic → **dataplane**
-- New apply/CRUD / persistence / user-agent token logic → **controlplane** (or `auth` / `agent`)
+- New apply/CRUD / persistence / user-agent token logic → **controlplane** (`api` / `auth` / `agent`)
 - Do not “reach through” with a concrete CP service from DP packages; use **ports** (`ControlPlaneReader`, `ProxyResolver`, …)
 
 ### Hexagonal habits

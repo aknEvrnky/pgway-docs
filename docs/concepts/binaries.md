@@ -106,12 +106,12 @@ Operator tool — not a server. Talks to the CP over gRPC with a user token (`pg
 | Area | Packages |
 |------|----------|
 | Shared domain | `internal/application/core/domain` |
-| Control plane | `internal/application/controlplane`, `auth`, `agent` |
+| Control plane | `internal/application/controlplane/{api,auth,agent}` |
 | Data plane | `internal/application/dataplane/{api,agenthost,balancer,consumer}` |
 | Ports | `internal/ports` |
 | Adapters | `internal/adapters/{grpc,http,rest,cli,repository/badger,...}` |
 
-`dataplane` packages must not import `controlplane` / `auth` / `agent`. Only `cmd/pgway` wires both planes in one process.
+`dataplane` packages must not import anything under `controlplane`. Only `cmd/pgway` wires both planes in one process.
 
 ## Related
 
