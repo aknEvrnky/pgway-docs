@@ -4,13 +4,12 @@ pgway pushes **OTLP/gRPC metrics** (and optionally **traces**) — there is no P
 
 | Component | Purpose | Image |
 |-----------|---------|-------|
-| OTel Collector | receives OTLP (gRPC `:4317`, HTTP `:4318`), re-exports metrics as Prometheus; traces → debug log | `otel/opentelemetry-collector:0.161.0` |
+| OTel Collector | receives OTLP (gRPC `:4317`, HTTP `:4318`), re-exports metrics as Prometheus and traces → Tempo | `otel/opentelemetry-collector:0.161.0` |
 | Prometheus | scrapes the collector; file-based TSDB, 15d retention | `prom/prometheus:v3.14.0` |
-| Grafana | dashboards; Prometheus datasource auto-provisioned | `grafana/grafana:13.2.2` |
+| Tempo | trace backend; receives spans from the collector, file-based local storage | `grafana/tempo:3.0.3` |
+| Grafana | dashboards + trace exploration; Prometheus and Tempo datasources auto-provisioned | `grafana/grafana:13.2.2` |
 
 The scrape config sets `honor_labels: true`, so the OTLP `service.name` resource attribute survives as the Prometheus `job` label (`pgway`, `pgway-cp`, `pgway-dp`). All published ports bind to `127.0.0.1` only.
-
-The bundled stack does **not** include Tempo/Jaeger. Traces received by the collector are written to the collector debug exporter so spans are not dropped; point `otel.endpoint` at Tempo or any other OTLP backend when you want a trace UI.
 
 ## Run the stack
 
@@ -22,12 +21,13 @@ docker compose -f docker/observability/compose.yaml up -d
 |----------|-----|
 | Grafana | http://localhost:3000 (admin / admin) |
 | Prometheus UI | http://localhost:9091 |
+| Tempo HTTP API | http://localhost:3200 (queries, `/ready`; the trace UI is Grafana Explore) |
 | OTLP gRPC / HTTP | `localhost:4317` / `localhost:4318` |
 | Collector health check | http://localhost:13133 |
 
 Prometheus is published on **9091** because pgway's default gRPC listen port is `:9090`.
 
-Prometheus TSDB and Grafana state live in named volumes (`prom-data`, `grafana-data`) and survive `docker compose down`; run `down -v` to wipe them.
+Prometheus TSDB, Tempo blocks, and Grafana state live in named volumes (`prom-data`, `tempo-data`, `grafana-data`) and survive `docker compose down`; run `down -v` to wipe them.
 
 ## Point pgway at it
 
@@ -52,7 +52,7 @@ With `otel.enabled = true` and `otel.traces_enabled = true`, pgway exports spans
 
 Sampling uses ParentBased + TraceIDRatioBased (`otel.trace_sample_ratio`, default `0.1`). Span attributes mirror metrics (`entrypoint` / `result` / `protocol`, or `method` / `result`) — no raw URLs, headers, or tokens.
 
-To inspect traces in a UI, run Tempo (or Jaeger) and either point pgway at it directly or add an OTLP exporter from the collector to that backend.
+Traces land in the bundled **Tempo** and are queryable in Grafana via **Explore → Tempo** (datasource auto-provisioned, filter by `service.name`). To use a different backend instead, point pgway at it directly or swap the collector's `otlp/tempo` exporter.
 
 ## Import the dashboard
 
