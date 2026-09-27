@@ -38,8 +38,9 @@ Work is tracked on the [Dashboard](https://github.com/aknEvrnky/pgway/milestones
 | Flow visual editor (Vue Flow) + read-only YAML projection | Done (experimental) |
 | Users admin UI (admin-only nav) | Done ([#109](https://github.com/aknEvrnky/pgway/issues/109)) |
 | Home agents panel + Agents page (read-only) | Done ([#108](https://github.com/aknEvrnky/pgway/issues/108)) — register/revoke still via pgctl |
-| Settings / notifications | Stub / hidden — later |
-| Overview charts / live logs / health panels | Later ([#20](https://github.com/aknEvrnky/pgway/issues/20), [#14](https://github.com/aknEvrnky/pgway/issues/14), [#9](https://github.com/aknEvrnky/pgway/issues/9)) |
+| YAML import/export | Planned ([#106](https://github.com/aknEvrnky/pgway/issues/106)) |
+| WebSocket foundation (management listener) | Planned ([#101](https://github.com/aknEvrnky/pgway/issues/101)) |
+| Overview charts / live logs / health panels | Later — depends on [#14](https://github.com/aknEvrnky/pgway/issues/14), [#15](https://github.com/aknEvrnky/pgway/issues/15), [#9](https://github.com/aknEvrnky/pgway/issues/9) |
 
 Milestone: [Dashboard](https://github.com/aknEvrnky/pgway/milestones) on GitHub.
 
@@ -67,7 +68,6 @@ The all-in-one / CP process must be running with `dashboard.enabled = true` (def
    - **Entrypoints** (`/entrypoints`) — listen host/port bound to a Flow. Detach in the editor deletes the entrypoint (stops the socket); the Flow remains.
    - **Agents** (`/` home panel + `/agents`) — read-only list from `GET /api/v1/agents` (`active` / `passive` / `disconnected`, hostname, version, last heartbeat). Register/revoke still via `pgctl` / gRPC.
    - **Users** (`/users`) — **admin only** (nav + route gate). List / create (`admin` or `member`; empty create password → one-time `generated_password`), delete (last admin blocked), password reset (new password required, same as gRPC). Members never see the nav item; hitting `/users` redirects home.
-5. **Settings** and header notifications are hidden until there is something to configure.
 
 ### Session & API client
 
